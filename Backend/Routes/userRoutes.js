@@ -1,22 +1,43 @@
-const express = require('express');
-const {createUser , getAllUsers, deleteUser, updateUser, getAllUsersById, login} = require('../controllers/userController');
-const User= require('../models/userSchema')
-const route= express.Router();
+const express = require("express");
 
+const {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  login,
+  googleAuth,
+  verifyEmail,
+  followUser,
+  changeSavedLikedBlog
+} = require("../controllers/userController");
+const verifyUser = require("../middlewares/auth");
+const upload = require("../utils/multer");
 
+const route = express.Router();
 
-route.post("/users", createUser )
-route.post("/login", login )
+route.post("/signup", createUser);
+route.post("/signin", login);
 
-route.get("/users",getAllUsers);
+route.get("/users", getAllUsers);
 
-route.get("/users/:id",getAllUsersById);
+route.get("/users/:username", getUserById);
 
-route.patch("/users/:id",updateUser);
+route.patch("/users/:id", verifyUser, upload.single("profilePic"), updateUser);
 
-route.delete("/users/:id", deleteUser);
+route.delete("/users/:id", verifyUser, deleteUser);
 
+// verify email/token
 
+route.get("/verify-email/:verificationToken", verifyEmail);
 
+//google auth route
+route.post("/google-auth", googleAuth);
 
-module.exports=route
+// follow /unfollow
+route.patch("/follow/:id", verifyUser, followUser);
+
+route.patch("/change-saved-liked-blog-visibility" , verifyUser , changeSavedLikedBlog)
+
+module.exports = route;

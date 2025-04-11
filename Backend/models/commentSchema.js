@@ -1,17 +1,18 @@
 const mongoose = require("mongoose");
+
 const commentSchema = new mongoose.Schema(
   {
     comment: {
       type: String,
       required: true,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
     blog: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     likes: [
       {
@@ -19,6 +20,22 @@ const commentSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    // for nested comment
+
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
+
+    parentComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+    },
+    
   },
   { timestamps: true }
 );

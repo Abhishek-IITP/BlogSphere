@@ -1,31 +1,70 @@
-const express = require('express');
-const {createBlogs , getBlogs, getBlogsById, updateBlogs, deleteBlogs,likeBlogs} = require('../controllers/blogController');
-const verifyUser = require('../Middlewares/auth');
-const { addComment, deleteComment, editComment, likeComment } = require('../controllers/commentController');
+const express = require("express");
 
-const route= express.Router();
+const {
+  createBlog,
+  getBlogs,
+  getBlog,
+  updateBlog,
+  deleteBlog,
+  likeBlog,
+  saveBlog,
+  searchBlogs,
+} = require("../controllers/blogController");
 
-route.post("/blogs", verifyUser ,createBlogs);
+const verifyUser = require("../middlewares/auth");
 
-route.get("/blogs",getBlogs );
+const {
+  addComment,
+  deleteComment,
+  editComment,
+  likeComment,
+  addNestedComment,
+} = require("../controllers/commentController");
+const upload = require("../utils/multer");
 
-route.get("/blogs/:id",getBlogsById);
+const route = express.Router();
 
-route.patch("/blogs/:id",verifyUser,updateBlogs);
+//blogs
+// route.post(
+//   "/blogs",
+//   verifyUser,
+//   upload.fields([{ name: "image" }, { name: "images" }]),
+//   createBlog
+// );
+route.post(
+  "/blogs",
+  verifyUser,
+  upload.fields([{ name: "image", maxCount: 1 }, { name: "images" }]),
+  createBlog
+);
+route.get("/blogs", getBlogs);
 
-route.delete("/blogs/:id",verifyUser, deleteBlogs);
+route.get("/blogs/:blogId", getBlog);
+
+route.patch(
+  "/blogs/:id",
+  verifyUser,
+  upload.fields([{ name: "image", maxCount: 1 }, { name: "images" }]),
+  updateBlog
+);
+route.delete("/blogs/:id", verifyUser, deleteBlog);
+
+//like
+route.post("/blogs/like/:id", verifyUser, likeBlog);
+
+//comment
+route.post("/blogs/comment/:id", verifyUser, addComment);
+route.delete("/blogs/comment/:id", verifyUser, deleteComment);
+route.patch("/blogs/edit-comment/:id", verifyUser, editComment);
+route.patch("/blogs/like-comment/:id", verifyUser, likeComment); 
+
+// for nested comment
+route.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);
+
+route.get("/search-blogs", searchBlogs)
 
 
-route.post("/blogs/like/:id",verifyUser, likeBlogs);
+// save blog / bookmark blog
+route.patch("/save-blog/:id", verifyUser, saveBlog);
 
-route.post("/blogs/comment/:id",verifyUser, addComment);
-
-route.delete("/blogs/comment/:id",verifyUser, deleteComment);
-
-route.patch("/blogs/edit-comment/:id",verifyUser, editComment);
-
-
-route.patch("/blogs/like-comment/:id",verifyUser, likeComment);
-
-
-module.exports=route
+module.exports = route;
