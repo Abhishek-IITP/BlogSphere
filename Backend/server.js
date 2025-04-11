@@ -1,26 +1,20 @@
 const express = require("express");
 const cors = require("cors");
-const dbConnect = require("./config/dbConnect");
-const userRoute = require("./routes/userRoutes");
-const blogRoute = require("./routes/blogRoutes");
-const cloudinaryConfig = require("./config/cloudinaryConfig");
-const { PORT, FRONTEND_URL } = require("./config/dotenv.config");
+const dbConnect = require("./Config/dbConnect")
 const app = express();
+const userRoutes= require("./Routes/userRoutes")
+const blogRoutes= require("./Routes/blogRoutes")
+const mongoose = require("mongoose");
+const User=require("./models/userSchema")
 
-const port = PORT || 5000;
-
+app.use(cors());
 app.use(express.json());
-app.use(cors({ origin: FRONTEND_URL }));
 
-app.get("/", (req, res) => {
-  res.send("Hello Ji Ki hal Bhai ke");
-});
+app.use("/api/v1",userRoutes)
+app.use("/api/v1",blogRoutes)
 
-app.use("/api/v1", userRoute);
-app.use("/api/v1", blogRoute);
-
-app.listen(port, () => {
-  console.log("Server Started");
+// Server
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
   dbConnect();
-  cloudinaryConfig();
 });
