@@ -24,13 +24,19 @@ async function addComment(req, res) {
       }
   
       //create comment
-      const newComment = await Comment.create({ comment, blog: id, user: creator });
+      const newComment = await Comment.create({ comment, blog: id, user: creator }).then((comment)=>{
+        return comment.populate({
+          path: "user",
+          select: "name email"
+        })
+      })
     
       await Blog.findByIdAndUpdate(id, { $push: { comments: newComment._id } });
   
       return res.status(200).json({
         success: true,
         message: "Comment added successfully",
+        newComment,
       });
   
     } catch (err) {
