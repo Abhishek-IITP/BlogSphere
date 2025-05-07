@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { Link, Navigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import InputField from "../Components/InputField";
-
+import { useDispatch } from "react-redux";
+import { login } from "../Utils/UserSlice";
+import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg"
+import { GoogleAuth } from "../Utils/fireBase";
 const AuthForm = ({ type }) => {
   const [userData, setUserData] = useState({
     name: "",
     email: "",
     password: "",
   });
-  const token = JSON.parse(localStorage.getItem("token"));
-  if (token) return <Navigate to="/" />;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (field) => (e) =>
     setUserData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -23,67 +26,132 @@ const AuthForm = ({ type }) => {
         `${import.meta.env.VITE_BACKEND_URL}/${type}`,
         userData
       );
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", JSON.stringify(data.token));
-      toast.success(data.message);
+
+      if (type === "signup") {
+        toast.success(data.message);
+        navigate("/signin");
+      } else {
+        toast.success(data.message);
+        dispatch(login(data.user));
+        navigate("/");
+      }
     } catch (error) {
       toast.error(error?.response?.data?.message);
       console.error(error);
+    } finally {
+      setUserData({
+        name: "",
+        email: "",
+        password: "",
+      });
     }
   };
 
+
+  async function handleGoogleAuth() {
+    
+    try {
+      let data = await GoogleAuth();
+      console.log(data)
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/google-auth`, {
+        accessToken : data.accessToken,
+      }
+    )
+    console.log(res)
+    navigate("/")
+    dispatch(login(res.data.user));
+    toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+
+      console.log(error)
+      
+    }
+    
+  }
+
+  async function clearOnClick() {
+    setUserData({
+      name: "",
+      email: "",
+      password: "",
+    });
+  }
+
   return (
-    <div className="w-1/4 min-w-[300px] mt-46 flex flex-col items-center gap-5">
-      <h1 className="text-3xl capitalize">{type}</h1>
+    <div className="w-full min-h-screen flex items-center justify-center bg-[#F7F4ED] font-[Segoe UI]">
+      <div className="w-full max-w-[420px] p-8 rounded-3xl backdrop-blur-md bg-white/60 border border-white/40 shadow-2xl">
+        <h1 className="text-3xl font-bold capitalize text-center text-gray-800 mb-6">
+          {type === "signup" ? "Create an account" : "Welcome back"}
+        </h1>
 
-      <form onSubmit={handleAuthForm} className="w-full flex flex-col gap-4">
-        {type === "signup" && (
-          <InputField
-            type="text"
-            placeholder="Enter your Name"
-            value={userData.name}
-            onChange={handleChange("name")}
-          />
-        )}
-        <InputField
-          type="email"
-          placeholder="Enter your Email"
-          value={userData.email}
-          onChange={handleChange("email")}
-        />
-        <InputField
-          type="password"
-          placeholder="Enter your Password"
-          value={userData.password}
-          onChange={handleChange("password")}
-        />
-
-        <button
-          type="submit"
-          className="w-full h-11 text-white bg-gray-600 rounded-md text-lg hover:bg-gray-700 transition"
+        <form
+          onSubmit={handleAuthForm}
+          className="w-full flex flex-col gap-6"
         >
-          {type === "signup" ? "Register" : "Login"}
-        </button>
-      </form>
+          {type === "signup" && (
+            <InputField
+              type="text"
+              placeholder="Enter your Name"
+              value={userData.name}
+              onChange={handleChange("name")}
+              icon={"fi-sr-user"}
+            />
+          )}
+          <InputField
+            type="email"
+            placeholder="Enter your Email"
+            value={userData.email}
+            onChange={handleChange("email")}
+            icon={"fi-rr-envelope"}
+          />
+          <InputField
+            type="password"
+            placeholder="Enter your Password"
+            value={userData.password}
+            onChange={handleChange("password")}
+            icon={"fi-rr-lock"}
+          />
 
-      <p className="text-center text-sm">
-        {type === "signin" ? (
-          <>
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-blue-500 underline">
-              Sign Up
-            </Link>
-          </>
-        ) : (
-          <>
-            Already have an account?{" "}
-            <Link to="/signin" className="text-blue-500 underline">
-              Sign In
-            </Link>
-          </>
-        )}
-      </p>
+          <button
+            type="submit"
+            className="w-full py-3 text-white bg-green-600 rounded-full text-lg hover:bg-green-700 transition-all duration-200"
+          >
+            {type === "signup" ? "Register" : "Login"}
+          </button>
+        </form>
+
+        <p className=" text-xl flex justify-center my-4 font-semibold w-full">or</p>
+
+        <div onClick={handleGoogleAuth} className="bg-white px-5 py-3 rounded-full w-full overflow-hidden flex gap-4  items-center hover:bg-green-100 justify-center cursor-pointer ">
+          <p className="mt-[1px] text-2xl font-medium">Continue With</p>
+          <div>
+<img className="w-7 h-7 mt-1" src={googleIcon} alt="" />
+          </div>
+
+
+        </div>
+
+        <p className="text-center text-sm mt-6">
+          {type === "signin" ? (
+            <span onClick={clearOnClick}>
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-blue-600 underline">
+                Sign Up
+              </Link>
+            </span>
+          ) : (
+            <span onClick={clearOnClick}>
+              Already have an account?{' '}
+              <Link to="/signin" className="text-blue-600 underline">
+                Sign In
+              </Link>
+            </span>
+          )}
+        </p>
+      </div>
     </div>
   );
 };
+
 export default AuthForm;
