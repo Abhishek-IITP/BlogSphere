@@ -9,17 +9,15 @@ const ShortUniqueId= require('short-unique-id')
 const {randomUUID}= new ShortUniqueId({length:10})
 
 async function createBlogs(req, res) {
-  const creator = req.user;
-
+  
   try {
-    const { title, description, draft  } = req.body;
-    // const image = req.file;
+    const creator = req.user;
+    const { title, description  } = req.body;
+    const draft = req.body.draft == "false" ? false : true;
     const {image ,images } = req.files;
-    // console.log({ title, description, draft, image });
-    // console.log(req.body);
-    const content= JSON.parse(req.body.content)
- 
 
+    const content= JSON.parse(req.body.content);
+    const tags = JSON.parse(req.body.tags);
 
     if (!title || !description) {
       return res.status(400).json({
@@ -58,12 +56,12 @@ async function createBlogs(req, res) {
       }
     }
 
-    const { secure_url, public_id } = await uploadImage(`data:image/jpeg;base64,${images[0].buffer.toString("base64")}`
+    const { secure_url, public_id } = await uploadImage(`data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
   );
 
     // const blogId= title.toLowerCase().join("-")+"-"+ randomUUID()
-    const blogId = title.toLowerCase().replace(/ +/g, "-") + "-" + randomUUID();
-
+    const blogId = title.toLowerCase().split(" ").join("-") + "-" + randomUUID();
+// title.toLowerCase().replace(/ +/g, '-')
     const blog = await Blog.create({
       title,
       description,
@@ -73,9 +71,17 @@ async function createBlogs(req, res) {
       imageId: public_id,
       blogId,
       content,
+      tags,
 
     });
     await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
+    
+    if (draft) {
+      return res.status(200).json({
+        message: "Blog Saved as Draft. You can public it from your profile",
+        blog,
+      });
+    }
     return res.status(201).json({
       message: "Blog created successfully",
       blog,
@@ -88,10 +94,13 @@ async function createBlogs(req, res) {
   }
 }
 
+
 async function getBlogs(req, res) {
   try {
     // const blogs = await Blog.find({ draft: false }).populate("creator");
-    
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * limit;
     const blogs = await Blog.find(
       { draft: false }
     )
@@ -102,11 +111,18 @@ async function getBlogs(req, res) {
       .populate({
         path: "likes",
         select: "email  name",
-      });
+      })      
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+
+      const totalBlogs = await Blog.countDocuments({ draft: false });
 
     return res.status(200).json({
       message: "Blogs Fetched Successfully",
       blogs,
+      hasMore: skip + limit < totalBlogs,
     });
   } catch (err) {
     return res.status(500).json({
@@ -123,23 +139,13 @@ async function getBlogsById(req, res) {
       path: "comments",
       populate: {
         path: "user",
-        select: "name email",
+        select: "name email username profilePicture",
       },
     }).populate({
       path :"creator",
-      select:"name email"
-    })
-    // const blog = await Blog.findOne({ blogId }).populate("creator", "-password");
-
-
-    if(!blog){ 
-    return res.status(404).json({
-      message: "Blog not Found",
-
-    });
-
-    }
-
+      select:"name email followers username profilePicture"
+    }).lean();
+  
     return res.status(200).json({
       message: "Blog Fetched Successfully",
       success: true,
@@ -159,14 +165,12 @@ async function updateBlogs(req, res) {
 
     const { id } = req.params;
 
-    const { title, description, draft: draftValue } = req.body;
-    const draft = draftValue === "false" ? false : true;
+    const { title, description } = req.body;
+    const draft = req.body.draft == "false" ? false : true;
     
 
-    // const image = req.files;
-    // console.log(image)
-
     const content = JSON.parse(req.body.content);
+    const tags = JSON.parse(req.body.tags);
     const existingImages = JSON.parse(req.body.existingImages);
 
     const blog = await Blog.findOne({ blogId: id });
@@ -184,13 +188,8 @@ async function updateBlogs(req, res) {
       });
     }
 
-    let imageToDelete= blog.content.blocks.filter((block)=> block.type == "image").filter((block)=> !existingImages.find(({url})=> url == block.data.file.url)).map((block)=> block.data.file.imageId);
+    let imageToDelete = blog.content.blocks.filter((block)=> block.type == "image").filter((block)=> !existingImages.find(({url})=> url == block.data.file.url)).map((block)=> block.data.file.imageId);
 
-    if(imageToDelete.length>0){
-      await Promise.all(
-        imageToDelete.map((id)=> deleteImageFromCloudinary(id))
-      )
-    }
 
     if(req.files.images){
       let imageIndex =0;
@@ -210,20 +209,10 @@ async function updateBlogs(req, res) {
       }
     }
 
-
-
-    // Find the user
-    const user = await User.findById(creator).select("-password");
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found.",
-        success: false,
-      });
-    }
  
     if(req.files.image){
       await deleteImageFromCloudinary(blog.imageId);
-      const { secure_url, public_id } = await uploadImage(`data:image/jpeg;base64,${req.files.image[0].buffer.toString("base64")}`);
+      const { secure_url, public_id } = await uploadImage(`data:image/jpeg;base64,${req?.files?.image[0]?.buffer?.toString("base64")}`);
       blog.image = secure_url;
       blog.imageId = public_id;
 
@@ -234,19 +223,19 @@ async function updateBlogs(req, res) {
     blog.description = description || blog.description;
     blog.draft = draft;
     blog.content= content || blog.content;
-    // if (draft) {
-    //   return res.status(200).json({
-    //     message:
-    //       "Blog Saved as Draft. You can again public it from your profile page",
-    //     blog,
-    //   });
-    // }
-
-
-
+    blog.tags = tags || blog.tags;
+    
+    await blog.save();
+    
+    if (draft) {
+      return res.status(200).json({
+        message:
+          "Blog Saved as Draft. You can again public it from your profile page",
+        blog,
+      });
+    }
 
     // Save the updated blog
-    await blog.save();
 
     return res.status(200).json({
       success: true,
@@ -273,7 +262,7 @@ async function deleteBlogs(req, res) {
         success: false,
       });
     }
-    if (!(blog.creator == creator)) {
+    if (creator != blog.creator) {
       return res.status(403).json({
         message: "You are not authorized to delete this blog.",
         success: false,
@@ -296,7 +285,47 @@ async function deleteBlogs(req, res) {
   }
 }
 
-async function likeBlog(req, res) {
+// async function likeBlog(req, res) {
+//   try {
+//     const user = req.user;
+//     const { id } = req.params;
+
+//     const blog = await Blog.findById(id);
+
+//     if (!blog) {
+//       return res.status(500).json({
+//         message: "Blog is not found",
+//       });
+//     }
+
+//     if (!blog.likes.includes(user)) {
+//       await Blog.findByIdAndUpdate(id, { $push: { likes: user } });
+//       await User.findByIdAndUpdate(user, { $push: { likeBlogs: id } });
+//       return res.status(200).json({
+//         success: true,
+//         message: "Blog Liked successfully",
+//         isLiked: true,
+//       });
+//     } else {
+//       await Blog.findByIdAndUpdate(id, { $pull: { likes: user } });
+//       await User.findByIdAndUpdate(user, { $pull: { likeBlogs: id } });
+//       return res.status(200).json({
+//         success: true,
+//         message: "Blog DisLiked successfully",
+//         isLiked: false,
+//       });
+//     }
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// }
+
+// Funtion to save blogs
+ /**4 */
+ async function likeBlog(req, res) {
+  console.log("first")
   try {
     const user = req.user;
     const { id } = req.params;
@@ -333,7 +362,6 @@ async function likeBlog(req, res) {
   }
 }
 
-// Funtion to save blogs
 async function saveBlog(req, res){
   try {
     const user = req.user;
@@ -370,6 +398,59 @@ async function saveBlog(req, res){
 }
 
 
+async function searchBlogs(req, res) {
+  try {
+    const { search, tag } = req.query;
+
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * limit;
+
+    let query;
+
+    if (tag) {
+      query = { tags: tag };
+    } else {
+      query = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const blogs = await Blog.find(query, { draft: false })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "creator",
+        select: "name email followers username profilePicture",
+      });
+    if (blogs.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Make sure all words are spelled correctly.Try different keywords . Try more general keywords",
+        hasMore: false,
+      });
+    }
+
+    const totalBlogs = await Blog.countDocuments(query, { draft: false });
+
+    return res.status(200).json({
+      success: true,
+      blogs,
+      hasMore: skip + limit < totalBlogs,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+}
+
+
 
 
 module.exports = {
@@ -380,4 +461,5 @@ module.exports = {
   deleteBlogs,
   likeBlog,
   saveBlog,
+  searchBlogs,
 };

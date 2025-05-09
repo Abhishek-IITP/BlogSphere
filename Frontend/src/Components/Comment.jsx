@@ -5,16 +5,17 @@ import axios from 'axios';
 import { setCommentLikes, setComments } from '../Utils/SelectedBlogSlice';
 import { formatDate } from '../Utils/formateDate';
 import toast from 'react-hot-toast';
+import { Link } from "react-router-dom";
 
-const Comment = () => {
+
+function Comment() {
   const dispatch = useDispatch();
   const [comment, setComment] = useState('');
 
-  const { _id: blogId, comments } = useSelector((state) => state.SelectedBlog);
+  const { _id: blogId, comments , creator: { _id: creatorId } } = useSelector((state) => state.SelectedBlog);
   const { token, id: userId } = useSelector((state) => state.user);
 
   async function handleComment() {
-    if (!comment.trim()) return toast.error("Comment can't be empty!");
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${blogId}`,
@@ -24,10 +25,10 @@ const Comment = () => {
         }
       );
 
-      dispatch(setComments(res.data.newComment));
       setComment('');
+      dispatch(setComments(res.data.newComment));
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error posting comment");
+      toast.error(error?.response?.data?.message || "Error posting comment");
     }
   }
 
@@ -43,7 +44,7 @@ const Comment = () => {
       toast.success(res.data.message);
       dispatch(setCommentLikes({ commentId, userId }));
     } catch (error) {
-      toast.error("Couldn't like comment");
+      toast.error(error.response?.data?.message);
     }
   }
 
@@ -63,7 +64,7 @@ const Comment = () => {
     />
     <button
       onClick={handleComment}
-      className='bg-green-500 text-white py-2 px-6 rounded-full mt-3 hover:bg-green-600 transition font-medium'
+      className='bg-green-500 text-white py-2 px-6 cursor-pointer rounded-full mt-3 hover:bg-green-600 transition font-medium'
     >
       Post Comment
     </button>
@@ -92,10 +93,10 @@ const Comment = () => {
               </div>
               <p className='mt-1 text-gray-700'>{comment.comment}</p>
               <div className='flex items-center gap-2 mt-2'>
-                {comment.likes.includes(userId) ? (
-                  <i onClick={() => handleCommentLike(comment._id)} className="fi fi-ss-heart text-red-500 text-lg cursor-pointer"></i>
+                {comment?.likes?.includes(userId) ? (
+                  <i onClick={() => handleCommentLike(comment?._id)} className="fi fi-ss-heart text-red-500 text-lg cursor-pointer"></i>
                 ) : (
-                  <i onClick={() => handleCommentLike(comment._id)} className="fi fi-rs-heart text-gray-500 text-lg cursor-pointer hover:text-red-400 transition"></i>
+                  <i onClick={() => handleCommentLike(comment?._id)} className="fi fi-rs-heart text-gray-500 text-lg cursor-pointer hover:text-red-400 transition"></i>
                 )}
                 <span className='text-gray-600 text-sm'>{comment.likes.length}</span>
               </div>

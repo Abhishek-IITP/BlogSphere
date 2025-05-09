@@ -1,12 +1,11 @@
 const { default: mongoose } = require("mongoose");
-// const { googleAuth } = require("../controllers/userController");
 
 const userSchema = new mongoose.Schema({
     name: {
       type: String,
       required: true,
     },
-    email: { type: String, unique: true },
+    email: { type: String,required : true, unique: true },
     username: {
       type: String, 
       required : true,
@@ -14,7 +13,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
       type: String, 
-      unique: true
+      select: false,
     },
     blogs : [
       {
@@ -22,7 +21,7 @@ const userSchema = new mongoose.Schema({
           ref: "Blog",
       }
     ],
-    verify:{
+    isVerify:{
       type: Boolean,
       default: false,
     },
@@ -34,6 +33,10 @@ const userSchema = new mongoose.Schema({
     profilePicture:{
       type:String,
       default:null,
+    },
+    profilePicId: {
+      type: String,
+      default: null,
     },
     bio:{
       type: String,
@@ -65,7 +68,11 @@ const userSchema = new mongoose.Schema({
     showLikeBlogs:{
       type: Boolean,
       default : true,
-    }
+    },
+    showSavedBlogs: {
+      type: Boolean,
+      default: false,
+    },
 
   } , {timestamps : true});
   

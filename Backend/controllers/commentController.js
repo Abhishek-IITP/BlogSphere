@@ -27,7 +27,7 @@ async function addComment(req, res) {
       const newComment = await Comment.create({ comment, blog: id, user: creator }).then((comment)=>{
         return comment.populate({
           path: "user",
-          select: "name email"
+          select: "name email username profilePicture"
         })
       })
     
@@ -56,25 +56,44 @@ async function addComment(req, res) {
         path: "blog",
         select: "creator",
       });
-      //  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjUyNDNlOTM2YjQ1MmZkNjNlYThiYyIsImVtYWlsIjoiYWtrYXkyNDc3Nzc4ODJAZ21haWwuY29tIiwiaWF0IjoxNzQ0MjcyNTM5fQ.IcaaPGd45MwEfSJC_22eg4Cf4-aMho765J8Wr6tIFtg
       if (!comment) {
         return res.status(500).json({
           message: "Comment not found",
         });
       }
-      console.log(comment,userId,comment.blog.creator, comment.user)
   
       if (comment.user != userId && comment.blog.creator != userId) {
         return res.status(500).json({
           message: "You are not authorized",
         });
       }
+
+      async function deleteCommentAndReplies(id) {
+        let comment = await Comment.findById(id);
+  
+        for (let replyId of comment.replies) {
+          await deleteCommentAndReplies(replyId);
+        }
+  
+        if (comment.parentComment) {
+          await Comment.findByIdAndUpdate(comment.parentComment, {
+            $pull: { replies: id },
+          });
+        }
+  
+        await Comment.findByIdAndDelete(id);
+      }
+  
+      await deleteCommentAndReplies(id);
+
+
+
       await Blog.findByIdAndUpdate(comment.blog._id, {
         $pull: { comments: id },
       });
-      await Comment.findByIdAndDelete(id);
+      // await Comment.findByIdAndDelete(id);
   
-      await comment.deleteOne();
+      // await comment.deleteOne();
   
       return res.status(200).json({
         success: true,

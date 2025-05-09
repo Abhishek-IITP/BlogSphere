@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../Components/InputField";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { login } from "../Utils/UserSlice";
 import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg"
-import { GoogleAuth } from "../Utils/fireBase";
+import { googleAuth, handleRedirectResult } from "../Utils/fireBase";
+
+
 const AuthForm = ({ type }) => {
   const [userData, setUserData] = useState({
     name: "",
@@ -15,6 +17,12 @@ const AuthForm = ({ type }) => {
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const {token} = useSelector(state => state.user);
+  useEffect(()=>{
+    if(token){
+      navigate("/")
+    }
+  },[token])
 
   const handleChange = (field) => (e) =>
     setUserData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -51,16 +59,15 @@ const AuthForm = ({ type }) => {
   async function handleGoogleAuth() {
     
     try {
-      let data = await GoogleAuth();
-      console.log(data)
+      let data = await googleAuth();
+      const idToken = await data.getIdToken();
       const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/google-auth`, {
-        accessToken : data.accessToken,
+        accessToken : idToken,
       }
     )
-    console.log(res)
-    navigate("/")
     dispatch(login(res.data.user));
     toast.success(res.data.message);
+    navigate("/")
     } catch (error) {
       toast.error(error?.response?.data?.message);
 
@@ -77,6 +84,33 @@ const AuthForm = ({ type }) => {
       password: "",
     });
   }
+
+  useEffect(() => {
+    // Import the handleRedirectResult from your firebase utils
+    const handleRedirect = async () => {
+      try {
+        const userData = await handleRedirectResult();
+        if (userData) {
+          const idToken = await userData.getIdToken();
+          const res = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
+            {
+              accessToken: idToken,
+            }
+          );
+          dispatch(login(res.data.user));
+          toast.success(res.data.message);
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Redirect Error:", error);
+        toast.error("Authentication failed");
+      }
+    };
+
+    handleRedirect();
+  }, [dispatch, navigate]);
+
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center bg-[#F7F4ED] font-[Segoe UI]">

@@ -1,5 +1,5 @@
 const express = require('express');
-const {createUser , getAllUsers, deleteUser, updateUser, getAllUsersById, login,  googleAuth , verifyEmail} = require('../controllers/userController');
+const {createUser , getAllUsers, deleteUser, updateUser, getAllUsersById, login,  googleAuth , verifyEmail,followUser, changeSavedLikedBlog} = require('../controllers/userController');
 const verifyUser = require('../Middlewares/auth');
 // const User= require('../models/userSchema')
 const route= express.Router();
@@ -21,10 +21,11 @@ route.delete("/users/:id",verifyUser, deleteUser);
 route.get("/verify-email/:verificationToken" ,verifyEmail)
 
 // googleAuth
-// route.get("/google-auth" ,googleAuth)
 route.post("/google-auth", googleAuth)
 
+route.patch("/follow/:id", verifyUser, followUser);
 
+route.patch("/change-saved-liked-blog-visibility" , verifyUser , changeSavedLikedBlog)
 
 
 module.exports=route

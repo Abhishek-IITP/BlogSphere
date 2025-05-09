@@ -5,6 +5,10 @@ import HomePage from "./Components/HomePage";
 import BlogPage from "./Pages/BlogPage";
 import AddBlog from "./Pages/AddBlog";
 import VerifyUser from "./Components/VerifyUser";
+import ProfilePage from "./Pages/ProfilePage";
+import EditProfile from "./Pages/EditProfile";
+import Setting from "./Components/Setting";
+import SearchBlogs from "./Components/SearchBlogs";
 
 function App() {
   return (
@@ -18,7 +22,15 @@ function App() {
         <Route path="/blog/:id" element={<BlogPage/>} ></Route>
         <Route path="/edit/:id" element={<AddBlog/>} ></Route>
         <Route path="/verify-email/:verificationToken" element={<VerifyUser/>} ></Route>
-        
+
+        <Route path="/search" element={<SearchBlogs/>} ></Route>
+        <Route path="/tag/:tag" element={<SearchBlogs/>} ></Route>
+        <Route path="/:username" element={<ProfilePage/>} ></Route>
+        <Route path="/:username/saved-blogs" element={<ProfilePage/>} ></Route>
+        <Route path="/:username/liked-blogs" element={<ProfilePage/>} ></Route>
+        <Route path="/:username/draft-blogs" element={<EditProfile/>} ></Route>
+        <Route path="/setting" element={<Setting/>} ></Route>
+      
         </Route>
       </Routes>
     // </div>

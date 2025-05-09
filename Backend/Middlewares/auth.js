@@ -1,6 +1,8 @@
 const { verifyJWT } = require("../Utils/generateTokens");
 
 const verifyUser = async (req, res, next) => {
+
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -9,8 +11,7 @@ const verifyUser = async (req, res, next) => {
       message: "Authorization header is missing. Please sign in.",
     });
   }
-  const token = authHeader.split(" ")[1];
-// console.log(token)
+  let token = authHeader.split(" ")[1];
   if (!token) {
     return res.status(400).json({
       success: false,

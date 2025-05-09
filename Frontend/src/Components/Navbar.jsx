@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { logout } from '../Utils/UserSlice';
 
 const Navbar = () => {
   const { token, name, profilePicture } = useSelector((state) => state.user);
   const [showPopup, setShowPopup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
+  const [showSearchBar, setShowSearchBar] = useState(false);
   const menuItemClass =
     'text-sm md:text-base px-4 py-2 hover:bg-green-500 hover:text-white transition-colors duration-200 cursor-pointer';
 
@@ -15,6 +18,16 @@ const Navbar = () => {
     dispatch(logout());
     setShowPopup(false);
   }
+  useEffect(() => {
+    if (window.location.pathname !== "/search") {
+      setSearchQuery(null);
+    }
+    return () => {
+      if (window.location.pathname !== "/") {
+        setShowPopup(false);
+      }
+    };
+  }, [window.location.pathname]);
 
   return (
     <>
@@ -27,20 +40,41 @@ const Navbar = () => {
                 BlogSphere
               </h1>
             </Link>
-
-            <div className="relative hidden sm:block">
+            {/* "relative hidden sm:block" */}
+            <div
+            className={`relative  max-sm:absolute max-sm:z-40 max-sm:top-16 sm:block ${
+              showSearchBar ? " max-sm:block " : " max-sm:hidden "
+            }`}
+          >
               <i className="fi fi-rs-search absolute top-1/2 left-4 -translate-y-1/2 text-gray-500"></i>
               <input
                 type="text"
                 placeholder="Search"
                 className="bg-gray-100 text-sm pl-10 pr-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-green-400"
+                value={searchQuery ? searchQuery : ""}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.code == "Enter" || e.code == "NumpadEnter" || e.keyCode == "13") {
+                    if (searchQuery.trim()) {
+                      setShowSearchBar(false);
+                      if (showSearchBar) {
+                        setSearchQuery("");
+                      }
+                      navigate(`/search?q=${searchQuery.trim()}`);
+                    }
+                  }
+                }}
               />
             </div>
           </div>
 
           {/* Right section */}
-          <div className="flex items-center gap-5">
-            <Link to="/add-blog">
+          <div className="flex justify-center items-center gap-5">
+          <i
+            className="fi fi-rr-search  text-xl sm:hidden cursor-pointer "
+            onClick={() => setShowSearchBar((prev) => !prev)}
+          ></i>
+            <Link to={"/add-blog"}>
               <div className="flex items-center mt-1 gap-2 hover:text-green-500 transition">
                 <i className="fi fi-rr-edit text-lg "></i>
                 <span className="text-sm  font-medium hidden sm:inline">Write</span>
@@ -81,10 +115,17 @@ const Navbar = () => {
 
         {/* Dropdown menu */}
         {showPopup && (
-          <div className="absolute top-[80px] right-8 w-[180px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          <div onMouseLeave={() => setShowPopup(false)}
+           className="absolute top-[80px] right-8 w-[180px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <Link to={`/username`}>
             <p className={`${menuItemClass} bg-gray-50 rounded-t-xl`}>Profile</p>
+            </Link>
+            <Link to={`/edit-profile`}>
             <p className={menuItemClass}>Edit Profile</p>
+            </Link>
+            <Link to={"/setting"}>
             <p className={menuItemClass}>Setting</p>
+            </Link>
             <p onClick={handleLogout} className={`${menuItemClass} text-red-500 rounded-b-xl`}>
               Log Out
             </p>

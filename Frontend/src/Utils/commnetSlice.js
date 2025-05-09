@@ -8,7 +8,7 @@ const commentSlice= createSlice({
     },
     reducers: {
         setIsOpen(state,action){
-            state.isOpen = action.payload === false ? false : !state.isOpen
+            state.isOpen = action.payload === false ? false : !state.isOpen;
         }
     }
 })

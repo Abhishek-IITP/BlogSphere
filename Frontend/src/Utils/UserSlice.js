@@ -2,22 +2,52 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const UserSlice= createSlice({
     name:"UserSlice",
-    initialState: JSON.parse(localStorage.getItem("user"))  || {token : null},
+    initialState: JSON.parse(localStorage.getItem("user"))  || {
+        token : null,
+        name: null,
+        username: null,
+        email: null,
+        id: null,
+        profilePicture: null,
+        followers: [],
+        following : [],
+    },
     reducers: {
         login(state, action){
-            localStorage.setItem("user", JSON.stringify(action.payload))
-            return action.payload;
+            localStorage.setItem("user", JSON.stringify({ followers: [], following: [], ...action.payload }))
+            return { followers: [], following: [], ...action.payload };
         },
         logout(state,action){
             localStorage.removeItem("user")
-            return {
-                
+            return {   
                 token : null
             }
 
-        }
-    }
-})
+        },
+        updateData(state, action) {
+            const data = action.payload;
+            if (data[0] === "visibility") {
+              localStorage.setItem("user", JSON.stringify({ ...state, ...data[1] }));
+              return { ...state, ...data };
+            } else if (data[0] === "followers") {
+              const finalData = {
+                ...state,
+                following: state?.following?.includes(data[1])
+                  ? state?.following?.filter((id) => id !== data[1])
+                  : [...state.following, data[1]],
+              };
+      
+              localStorage.setItem("user", JSON.stringify(finalData));
+              return finalData;
+            }
+          },
+        },
 
-export const {login,logout}= UserSlice.actions;
+        
+    }
+
+    
+)
+
+export const {login,logout , updateData}= UserSlice.actions;
 export default UserSlice.reducer;

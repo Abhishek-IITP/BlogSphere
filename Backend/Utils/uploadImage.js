@@ -1,7 +1,8 @@
-const cloudinaryConfig = require('../Config/cloudinaryConfig')
-
+// const cloudinaryConfig = require('../Config/cloudinaryConfig')
 const cloudinary = require('cloudinary').v2
 
+// Initialize Cloudinary
+// cloudinaryConfig();
 
 async function uploadImage(imagePath){
 try {
