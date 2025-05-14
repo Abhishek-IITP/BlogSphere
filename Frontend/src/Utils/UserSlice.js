@@ -35,18 +35,13 @@ const UserSlice= createSlice({
                 following: state?.following?.includes(data[1])
                   ? state?.following?.filter((id) => id !== data[1])
                   : [...state.following, data[1]],
-              };
-      
+              };  
               localStorage.setItem("user", JSON.stringify(finalData));
               return finalData;
             }
           },
-        },
-
-        
-    }
-
-    
+        },   
+    } 
 )
 
 export const {login,logout , updateData}= UserSlice.actions;
