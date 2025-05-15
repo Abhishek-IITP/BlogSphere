@@ -12,7 +12,7 @@ import SearchBlogs from "./Components/SearchBlogs";
 
 function App() {
   return (
-    // <div className=" w-screen h-fit  ">
+
       <Routes>
         <Route path="/" element={<Navbar/>} >
         <Route path="/" element={<HomePage/>} ></Route>
@@ -22,18 +22,17 @@ function App() {
         <Route path="/blog/:id" element={<BlogPage/>} ></Route>
         <Route path="/edit/:id" element={<AddBlog/>} ></Route>
         <Route path="/verify-email/:verificationToken" element={<VerifyUser/>} ></Route>
-
+        <Route path="/edit-profile" element={<EditProfile/>} />
         <Route path="/search" element={<SearchBlogs/>} ></Route>
         <Route path="/tag/:tag" element={<SearchBlogs/>} ></Route>
         <Route path="/:username" element={<ProfilePage/>} ></Route>
         <Route path="/:username/saved-blogs" element={<ProfilePage/>} ></Route>
         <Route path="/:username/liked-blogs" element={<ProfilePage/>} ></Route>
-        <Route path="/:username/draft-blogs" element={<EditProfile/>} ></Route>
+        <Route path="/:username/draft-blogs" element={<ProfilePage/>} ></Route>
         <Route path="/setting" element={<Setting/>} ></Route>
       
         </Route>
       </Routes>
-    // </div>
   );
 }
 
