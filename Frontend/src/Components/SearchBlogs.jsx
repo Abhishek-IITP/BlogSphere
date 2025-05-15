@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import DisplayBlogs from "./DisplayBlogs";
-import usePagination from "../hooks/usePagination";
+import usePagination from "../Hooks/usePagination";
 
 function SearchBlogs() {
   const [searchParams, setSearchParams] = useSearchParams();
