@@ -22,7 +22,6 @@ const UserSlice= createSlice({
             return {   
                 token : null
             }
-
         },
         updateData(state, action) {
             const data = action.payload;

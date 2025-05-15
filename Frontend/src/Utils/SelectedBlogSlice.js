@@ -82,7 +82,7 @@ const SelectedBlogSlice = createSlice({
           }
         }
 
-        return parentComment; //top level comment return kr raha hu dost ;
+        return parentComment;
       }
 
       let parentComment = findParentComment(state.comments);
