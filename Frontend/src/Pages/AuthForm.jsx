@@ -45,7 +45,6 @@ const AuthForm = ({ type }) => {
       }
     } catch (error) {
       toast.error(error?.response?.data?.message);
-      console.error(error.message);
     } finally {
       setUserData({
         name: "",
@@ -70,11 +69,7 @@ const AuthForm = ({ type }) => {
     navigate("/")
     } catch (error) {
       toast.error(error?.response?.data?.message);
-
-      console.log(error)
-      
     }
-    
   }
 
   async function clearOnClick() {
@@ -103,7 +98,6 @@ const AuthForm = ({ type }) => {
           navigate("/");
         }
       } catch (error) {
-        console.error("Redirect Error:", error);
         toast.error("Authentication failed");
       }
     };

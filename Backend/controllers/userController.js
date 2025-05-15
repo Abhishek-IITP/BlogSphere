@@ -63,7 +63,7 @@ async function createUser(req, res) {
         let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
       
         const sendingMail = await transporter.sendMail({
-          from: "abhishekmohanty7325@gmail.com",
+          from: process.env.EMAIL_USER,
           to: checkForexistingUser.email,
           subject: "Verify your BlogSphere account",
           html: `
@@ -112,7 +112,7 @@ async function createUser(req, res) {
 
 
     const sendingMail = await transporter.sendMail({
-      from: "abhishekmohanty7325@gmail.com",
+      from: process.env.EMAIL_USER,
       to: checkForexistingUser.email,
       subject: "Verify your BlogSphere account",
       html: `
@@ -148,7 +148,7 @@ async function createUser(req, res) {
   
     });
   } catch (err) {
-    console.log("Email sending failed:", err.message)
+    // console.log("Email sending failed:", err.message)
     return res.status(500).json({
       message: "Server error",
       success: false,
@@ -306,7 +306,7 @@ async function login(req, res) {
       let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
       
       const sendingMail = await transporter.sendMail({
-        from: "abhishekmohanty7325@gmail.com",
+        from: process.env.EMAIL_USER,
         to: checkForexistingUser.email,
         subject: "Verify your BlogSphere account",
         html: `

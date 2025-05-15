@@ -49,7 +49,6 @@ export async function handleSaveBlogs(id, token) {
   
       dispatch(updateData(["followers", id]));
     } catch (error) {
-      console.log(error);
       toast.error(error.response.data.message);
     }
   }

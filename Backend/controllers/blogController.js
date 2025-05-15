@@ -12,7 +12,6 @@ async function createBlogs(req, res) {
     const { title, description  } = req.body;
     const draft = req.body.draft == "false" ? false : true;
     const {image ,images } = req.files;
-    // console.log("image:", image)
 
     const content= JSON.parse(req.body.content);
     const tags = JSON.parse(req.body.tags);

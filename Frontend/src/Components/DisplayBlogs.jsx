@@ -8,7 +8,6 @@ import { handleSaveBlogs } from "../Pages/BlogPage";
 function DisplayBlogs({ blogs }) {
   const { token, id: userId } = useSelector((state) => state.user);
 
-  console.log(blogs)
   return (
     <div className="flex flex-col gap-12">
       {blogs.length > 0 ? (

@@ -178,7 +178,6 @@ function CommentCard({
   };
   const { username } = useSelector((state) => state.user);
 
-  console.log(comment)
   return (
     <div className="py-6 border-b border-gray-100">
       <div className="flex items-start gap-4">

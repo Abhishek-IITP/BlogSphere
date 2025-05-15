@@ -67,7 +67,6 @@ const AddBlog = () => {
       toast.success(res.data.message);
       navigate("/");
     } catch (error) {
-        console.log(error)
       toast.error(error.response.data.message);
     } finally{
       stopLoading();
@@ -98,7 +97,6 @@ const AddBlog = () => {
       
     })
     formData.append("existingImages", JSON.stringify(existingImages))
-    console.log(formData)
 
     try {
       startLoading();
@@ -116,7 +114,6 @@ const AddBlog = () => {
       toast.success(res.data.message || "Blog updated successfully");
       navigate("/"); 
     } catch (error) {
-      console.log("ERROR in update:", error);
       toast.error(error.response.data.message);
     } finally{
       stopLoading()
