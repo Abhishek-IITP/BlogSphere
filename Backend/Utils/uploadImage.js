@@ -1,8 +1,4 @@
-// const cloudinaryConfig = require('../Config/cloudinaryConfig')
 const cloudinary = require('cloudinary').v2
-
-// Initialize Cloudinary
-// cloudinaryConfig();
 
 async function uploadImage(imagePath){
 try {
@@ -12,7 +8,9 @@ try {
     console.log(result)
     return result;
 } catch (error) {
-    console.log(error )
+    console.log(error.message);
+    return null;
+
     
 }
 }
