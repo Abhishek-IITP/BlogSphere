@@ -17,12 +17,12 @@ const AuthForm = ({ type }) => {
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {token} = useSelector(state => state.user);
-  useEffect(()=>{
-    if(token){
-      navigate("/")
-    }
-  },[token])
+  // const {token} = useSelector(state => state.user);
+  // useEffect(()=>{
+  //   if(token){
+  //     navigate("/")
+  //   }
+  // },[token])
 
   const handleChange = (field) => (e) =>
     setUserData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -45,7 +45,7 @@ const AuthForm = ({ type }) => {
       }
     } catch (error) {
       toast.error(error?.response?.data?.message);
-      console.error(error);
+      console.error(error.message);
     } finally {
       setUserData({
         name: "",
