@@ -79,7 +79,7 @@ function DisplayBlogs({ blogs }) {
                     </div>
 
                     {/* Comments */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center cursor-pointer gap-1">
                       <i className="fi fi-sr-comment-alt text-base"></i>
                       <span>{blog?.comments?.length}</span>
                     </div>
