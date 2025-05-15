@@ -60,7 +60,7 @@ const AuthForm = ({ type }) => {
     try {
       let data = await googleAuth();
       const idToken = await data.getIdToken();
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/google-auth`, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}`/google-auth, {
         accessToken : idToken,
       }
     )
@@ -88,7 +88,7 @@ const AuthForm = ({ type }) => {
         if (userData) {
           const idToken = await userData.getIdToken();
           const res = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
+            `${import.meta.env.VITE_BACKEND_URL}`/google-auth,
             {
               accessToken: idToken,
             }
