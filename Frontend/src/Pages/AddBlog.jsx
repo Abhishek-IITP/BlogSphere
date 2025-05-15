@@ -16,23 +16,25 @@ import Table from '@editorjs/table'
 import ImageTool from '@editorjs/image';
 import { setIsOpen } from "../Utils/commnetSlice";
 import { removeSelectedBlog } from "../Utils/SelectedBlogSlice";
+import useLoader from "../Hooks/useLoader"
 
 const AddBlog = () => {
   const { id } = useParams();
   const editorjsRef= useRef(null);
-  
+  const [isLoading, startLoading, stopLoading] = useLoader();
   const formData= new FormData();
   const {token}= useSelector(slice=>slice.user)
-  const {title, description, image, content}= useSelector(slice => slice.SelectedBlog)
+  const {title, description, image, content,draft,tags}= useSelector(slice => slice.SelectedBlog)
   
-    const [blogData, setBlogData] = useState({
-      title: "",
-      description: "",
-      image: null,
-      tags: [],
-      content: "",
-      draft: false,
-    });
+  const [blogData, setBlogData] = useState({
+    title: "",
+    description: "",
+    image: null,
+    content: "",
+    tags: [],
+    draft: false,
+  });
+
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -51,6 +53,7 @@ const AddBlog = () => {
       }
     })
     try {
+      startLoading();
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/blogs`,
         formData,
@@ -61,12 +64,13 @@ const AddBlog = () => {
           },
         }
       );
-      // console.log(res);
       toast.success(res.data.message);
       navigate("/");
     } catch (error) {
         console.log(error)
       toast.error(error.response.data.message);
+    } finally{
+      stopLoading();
     }
   }
   async function handleUpdateBlog() {
@@ -94,8 +98,10 @@ const AddBlog = () => {
       
     })
     formData.append("existingImages", JSON.stringify(existingImages))
+    console.log(formData)
 
     try {
+      startLoading();
       const res = await axios.patch(
         `${import.meta.env.VITE_BACKEND_URL}/blogs/` + id,
         formData,
@@ -112,6 +118,8 @@ const AddBlog = () => {
     } catch (error) {
       console.log("ERROR in update:", error);
       toast.error(error.response.data.message);
+    } finally{
+      stopLoading()
     }
   }
 
@@ -148,9 +156,7 @@ function intilizeEditorjs(){
       },
       List : {
         class : NestedList,
-        config: {
-
-        },
+        config: {},
         inlineToolbar: true,
       },
       code: CodeTool,
@@ -168,7 +174,7 @@ function intilizeEditorjs(){
                 success: 1,
                 file: {
                   url: URL.createObjectURL(image),
-                  image
+                  image,
                 }
               };
 
@@ -250,234 +256,155 @@ function deleteTag(index) {
 
     }, [])
 
-  return token == null ? (
-    <Navigate to="/signin" />
-  ) :(
-//     <div className="w-[620px] mx-auto">
-
-// <div className=" my-4">
-// <h2 className="text-2xl font-semibold my-2">Title</h2>
-// <input
-//       className="bg-gray-50 border drop-shadow-xl border-gray-200 w-1/2 focus:outline-none rounded-lg p-2 placeholder:text-lg capitalize"
-//       type="text"
-//         placeholder="title"
-//         onChange={(e) =>
-//           setBlogData((blogData) => ({ ...blogData, title: e.target.value }))
-//         }
-//         value={blogData.title}
-        
-//       />
-//         </div>
-
-//       <div className="my-4">
-//       <h2 className="text-2xl font-semibold my-2">Description</h2>
-   
-//           <textarea type="text" placeholder="description"  className='resize-none h-[150px] border 
-//     border-gray-200 drop-shadow-2xl w-full p-4 text-lg focus:outline-none placeholder:text-lg capitalize'
-//     // <input
-//     // className="bg-amber-50 " 
-
-//     //   type="text"
-      
-      
-//     //   value={blogData.description}
-//     // />
-//     onChange={(e) =>
-//       setBlogData((blogData) => ({
-//         ...blogData,
-//         description: e.target.value,
-//       }))
-//     } />
-//       </div>
-    
-
-//       <div>
-//       <h2 className="text-2xl font-semibold my-2">Image</h2>
-
-//         <label htmlFor="image">
-//           {blogData.image ? (
-//             <img
-//               src={typeof(blogData.image)=== "string"? blogData.image:URL.createObjectURL(blogData.image)}
-//               alt=""
-//               className="aspect-video border-gray-200 border rounded-xl object-cover"
-//             />
-//           ) : (
-//             <div className="bg-white border-gray-400 border rounded-xl aspect-video flex justify-center items-center text-4xl opacity-40">
-//               <h1>select image</h1>
-//             </div>
-//           )}
-//         </label>
-//         <input
-//           className="hidden"
-//           id="image"
-//           type="file"
-//           accept=".png , .jpeg ,jpg"
-//           onChange={(e) =>
-//             setBlogData((blogData) => ({
-//               ...blogData,
-//               image: e.target.files[0],
-//             }))
-//           }
-//         />
-//       </div>
-
-//       <div className="my-4">
-//       <h2 className="text-2xl font-semibold my-2">Content</h2>
-//       <div className=" min-h-10" id="editorjs"></div>
-//       </div>
-
-//       <button className="bg-green-500 my-6  rounded-full font-semibold hover:bg-green-600 cursor-pointer transition-all text-lg py-4 px-7 text-white" onClick={id?handleUpdateBlog:handlePostBlog}>{id?"Update Blog":"Post Blog"}</button>
-//     </div>
-<div className=" p-5 w-full sm:w-[500px] lg:w-[1000px] mx-auto">
-      <div className=" lg:flex lg:justify-between  gap-8">
-        <div className=" lg:w-3/6">
-          <h2 className="text-2xl font-semibold my-2">Image</h2>
-          <label htmlFor="image" className=" ">
-            {blogData.image ? (
-              <img
-                src={
-                  typeof blogData.image == "string"
-                    ? blogData.image
-                    : URL.createObjectURL(blogData.image)
-                }
-                alt=""
-                className="aspect-video object-cover border rounded-lg"
-              />
-            ) : (
-              <div className=" bg-white border rounded-lg aspect-video opacity-50 flex justify-center items-center text-4xl">
-                Select Image
-              </div>
-            )}
-          </label>
-          <input
-            className="hidden"
-            id="image"
-            type="file"
-            accept=".png, .jpeg, .jpg"
-            onChange={(e) =>
-              setBlogData((blogData) => ({
-                ...blogData,
-                image: e.target.files[0],
-              }))
-            }
-          />
-        </div>
-
-        <div className=" lg:w-3/6">
-          <div className="my-4">
-            <h2 className="text-2xl font-semibold my-2">Title</h2>
-            <input
-              type="text"
-              placeholder="title"
-              onChange={(e) =>
-                setBlogData((blogData) => ({
-                  ...blogData,
-                  title: e.target.value,
-                }))
+return token == null ? (
+  <Navigate to="/signin" />
+) : (
+  <div style={{fontFamily:"sans-serif"}} className="max-w-4xl px-6 py-12 mx-auto  text-[#1A1A1A]">
+    <div className="flex flex-col lg:flex-row gap-12">
+      {/* Image Upload Section */}
+      <div className="w-full lg:w-1/2">
+        <h2 className="text-[1.3rem] font-semibold mb-3">Cover Image</h2>
+        <label htmlFor="image" className="block cursor-pointer group">
+          {blogData.image ? (
+            <img
+              src={
+                typeof blogData.image === "string"
+                  ? blogData.image
+                  : URL.createObjectURL(blogData.image)
               }
-              value={blogData.title}
-              className="border focus:outline-none rounded-lg w-full p-2 placeholder:text-lg"
+              alt=""
+              className="aspect-video w-full object-cover rounded-lg border border-gray-200 shadow-sm group-hover:brightness-90 transition"
             />
-          </div>
-
-          <div className="my-4">
-            <h2 className="text-2xl font-semibold my-2">Tags</h2>
-            <input
-              type="text"
-              placeholder="tags"
-              className="w-full p-3 rounded-lg border text-lg focus:outline-none"
-              onKeyDown={handleKeyDown}
-            />
-
-            <div className="flex justify-between my-2">
-              <p className="text-xs my1 opacity-60">
-                *Click on Enter to add Tag
-              </p>
-              <p className="text-xs my1 opacity-60">
-                {10 - blogData.tags.length} tags remaining
-              </p>
+          ) : (
+            <div className="aspect-video w-full flex items-center justify-center border-2 border-dashed rounded-lg text-gray-400 text-sm bg-gray-50 hover:bg-gray-100 transition">
+              Click to upload image
             </div>
-
-            <div className="flex flex-wrap">
-              {blogData?.tags?.map((tag, index) => (
-                <div
-                  key={index}
-                  className="m-2 bg-gray-200 text-black  hover:text-white hover:bg-blue-500 rounded-full px-7 py-2 flex gap-3 justify-center items-center"
-                >
-                  <p>{tag}</p>
-                  <i
-                    className="fi fi-sr-cross-circle mt-1 text-xl cursor-pointer"
-                    onClick={() => deleteTag(index)}
-                  ></i>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="my-4">
-        <h2 className="text-2xl font-semibold my-2">Description</h2>
-        <textarea
-          type="text"
-          placeholder="description"
-          value={blogData.description}
-          className=" h-[100px] resize-none w-full p-3 rounded-lg border text-lg focus:outline-none"
+          )}
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          id="image"
+          className="hidden"
           onChange={(e) =>
             setBlogData((blogData) => ({
               ...blogData,
-              description: e.target.value,
+              image: e.target.files[0],
             }))
           }
         />
       </div>
 
-      <div className="my-4">
-        <h2 className="text-2xl font-semibold my-2">Draft</h2>
-        <select
-          value={blogData.draft}
-          name=""
-          id=""
-          className="w-full p-3 rounded-lg border text-lg focus:outline-none"
-          onChange={(e) =>
-            setBlogData((prev) => ({
-              ...prev,
-              draft: e.target.value == "true" ? true : false,
-            }))
-          }
-        >
-          <option value="true">True</option>
-          <option value="false">False</option>
-        </select>
-      </div>
-
-      <div className="my-4">
-        <h2 className="text-2xl font-semibold my-2">Content</h2>
-        <div id="editorjs" className="w-full"></div>
-      </div>
-
+      {/* Title and Tags */}
+      <div className="w-full lg:w-1/2 space-y-6">
         <div>
-          <button
-            className="bg-blue-500 px-7 py-3 rounded-full  font-semibold text-white my-6 "
-            onClick={id ? handleUpdateBlog : handlePostBlog}
-          >
-            {blogData.draft
-              ? "Save as Draft"
-              : id
-              ? "Update blog"
-              : "Post blog"}
-          </button>
-          <button
-            className={` mx-4 px-7 py-3 rounded-full text-white my-3 bg-black`}
-            onClick={() => navigate(-1)}
-          >
-            Back
-          </button>
+          <h2 className="text-[1.3rem] font-semibold mb-2">Title</h2>
+          <input
+            type="text"
+            value={blogData.title}
+            placeholder="Give your blog a headline..."
+            onChange={(e) =>
+              setBlogData((blogData) => ({
+                ...blogData,
+                title: e.target.value,
+              }))
+            }
+            className="w-full px-4 py-3 border border-gray-300 rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-500"
+          />
         </div>
 
+        <div>
+          <h2 className="text-[1.3rem] font-semibold mb-2">Tags</h2>
+          <input
+            type="text"
+            placeholder="Press Enter to add tag"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-black"
+            onKeyDown={handleKeyDown}
+          />
+          <div className="flex flex-wrap gap-2 mt-3">
+            {blogData.tags?.map((tag, index) => (
+              <span
+                key={index}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-sm rounded-full border border-gray-300 hover:bg-black hover:text-white transition"
+              >
+                {tag}
+                <i
+                  className="fi fi-sr-cross-circle text-base cursor-pointer"
+                  onClick={() => deleteTag(index)}
+                />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
 
-  );
+    {/* Description */}
+    <div className="mt-10">
+      <h2 className="text-[1.3rem] font-semibold mb-2">Short Description</h2>
+      <textarea
+        value={blogData.description}
+        placeholder="Brief summary of the article..."
+        onChange={(e) =>
+          setBlogData((blogData) => ({
+            ...blogData,
+            description: e.target.value,
+          }))
+        }
+        className="w-full h-28 px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-black resize-none placeholder:text-gray-500"
+      />
+    </div>
+
+    {/* Draft Toggle */}
+    <div className="mt-8">
+      <h2 className="text-[1.3rem] font-semibold mb-2">Save as Draft</h2>
+      <select
+        value={blogData.draft}
+        onChange={(e) =>
+          setBlogData((prev) => ({
+            ...prev,
+            draft: e.target.value === "true",
+          }))
+        }
+        className="w-full px-4 py-3 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-black"
+      >
+        <option value="true">True</option> 
+        <option value="false">false</option>
+      </select>
+    </div>
+
+    {/* Editor */}
+    <div className="mt-8">
+      <h2 className="text-[1.3rem] font-semibold mb-2">Content</h2>
+      <div
+        id="editorjs"
+        className="min-h-[300px] px-5 py-4 border border-gray-300 rounded-md bg-white"
+      ></div>
+    </div>
+
+    {/* Action Buttons */}
+    <div className="flex gap-4 mt-10">
+      <button
+        onClick={id ? handleUpdateBlog : handlePostBlog}
+        className="bg-black text-white font-semibold px-7 py-3 rounded-full hover:bg-gray-800 transition"
+      >
+        {blogData.draft
+          ? "Save as Draft"
+          : id
+          ? "Update Blog"
+          : "Publish Blog"}
+      </button>
+      <button
+        onClick={() => navigate(-1)}
+        className="px-7 py-3 rounded-full border border-gray-300 text-gray-800 hover:bg-gray-100 transition"
+      >
+        Back
+      </button>
+    </div>
+  </div>
+);
+
+
 };
 
 export default AddBlog;
