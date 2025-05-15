@@ -2,7 +2,7 @@ const express = require('express');
 const {createBlogs , getBlogs, getBlogsById, updateBlogs, deleteBlogs,likeBlog,saveBlog,searchBlogs,
 } = require('../controllers/blogController');
 const verifyUser = require('../Middlewares/auth');
-const { addComment, deleteComment, editComment, likeComment } = require('../controllers/commentController');
+const { addComment, deleteComment, editComment, likeComment,addNestedComment,} = require('../controllers/commentController');
 const upload = require('../Utils/multer');
 
 const route= express.Router();
@@ -18,18 +18,19 @@ route.patch("/blogs/:id",verifyUser, upload.fields([{name: 'image', maxCount: 1}
 
 route.delete("/blogs/:id",verifyUser, deleteBlogs);
 
-
+// like
 route.post("/blogs/like/:id",verifyUser, likeBlog);
 
-
+// comment
 route.post("/blogs/comment/:id",verifyUser, addComment);
 
 route.delete("/blogs/comment/:id",verifyUser, deleteComment);
 
 route.patch("/blogs/edit-comment/:id",verifyUser, editComment);
 
-
 route.patch("/blogs/like-comment/:id",verifyUser, likeComment);
+
+route.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);
 
 // SAVE BLOGS / BOOKMARK BLOGS
 
