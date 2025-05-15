@@ -28,16 +28,21 @@ export async function googleAuth() {
   try {
     if (isMobile) {
       await signInWithRedirect(auth, provider);
+      const result = await getRedirectResult(auth);
+      if (result) {
+        return result.user;
+      }
     } else {
-      const result = await signInWithPopup(auth, provider);
+      let result = await signInWithPopup(auth, provider);
       return result.user;
     }
   } catch (error) {
-    console.error("Google Auth Error:", error);
-    toast.error("Login failed. Please try again.");
+    console.error("Authentication error:", error);
+    toast.error("Please try again later");
     return null;
   }
 }
+
 
 // ✅ Called on page load after redirect
 export async function handleRedirectResult() {
