@@ -6,7 +6,7 @@ import InputField from "../Components/InputField";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../Utils/UserSlice";
 import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg"
-import { googleAuth, handleRedirectResult } from "../Utils/fireBase";
+import { googleAuth, handleRedirectResult } from "../Utils/firebase";
 
 
 const AuthForm = ({ type }) => {
