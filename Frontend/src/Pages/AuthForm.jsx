@@ -3,11 +3,10 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import InputField from "../Components/InputField";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { login } from "../Utils/UserSlice";
-import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg"
+import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg";
 import { googleAuth, handleRedirectResult } from "../Utils/firebase";
-
 
 const AuthForm = ({ type }) => {
   const [userData, setUserData] = useState({
@@ -17,12 +16,6 @@ const AuthForm = ({ type }) => {
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const {token} = useSelector(state => state.user);
-  // useEffect(()=>{
-  //   if(token){
-  //     navigate("/")
-  //   }
-  // },[token])
 
   const handleChange = (field) => (e) =>
     setUserData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -44,54 +37,44 @@ const AuthForm = ({ type }) => {
         navigate("/");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
-      setUserData({
-        name: "",
-        email: "",
-        password: "",
-      });
+      setUserData({ name: "", email: "", password: "" });
     }
   };
 
-
-  async function handleGoogleAuth() {
-    
+  const handleGoogleAuth = async () => {
     try {
-      let data = await googleAuth();
-      const idToken = await data.getIdToken();
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/google-auth`, {
-        accessToken : idToken,
+      const user = await googleAuth();
+      if (user) {
+        const idToken = await user.getIdToken();
+        const res = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
+          { accessToken: idToken }
+        );
+        dispatch(login(res.data.user));
+        toast.success(res.data.message);
+        navigate("/");
       }
-    )
-    dispatch(login(res.data.user));
-    toast.success(res.data.message);
-    navigate("/")
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.message || "Google login failed");
     }
-  }
+  };
 
-  async function clearOnClick() {
-    setUserData({
-      name: "",
-      email: "",
-      password: "",
-    });
-  }
+  const clearOnClick = () => {
+    setUserData({ name: "", email: "", password: "" });
+  };
 
+  // ✅ Check for redirect result on page load
   useEffect(() => {
-    // Import the handleRedirectResult from your firebase utils
-    const handleRedirect = async () => {
+    const checkRedirect = async () => {
       try {
-        const userData = await handleRedirectResult();
-        if (userData) {
-          const idToken = await userData.getIdToken();
+        const user = await handleRedirectResult();
+        if (user) {
+          const idToken = await user.getIdToken();
           const res = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
-            {
-              accessToken: idToken,
-            }
+            { accessToken: idToken }
           );
           dispatch(login(res.data.user));
           toast.success(res.data.message);
@@ -102,9 +85,8 @@ const AuthForm = ({ type }) => {
       }
     };
 
-    handleRedirect();
+    checkRedirect();
   }, [dispatch, navigate]);
-
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center bg-[#F7F4ED] font-[Segoe UI]">
@@ -113,17 +95,14 @@ const AuthForm = ({ type }) => {
           {type === "signup" ? "Create an account" : "Welcome back"}
         </h1>
 
-        <form
-          onSubmit={handleAuthForm}
-          className="w-full flex flex-col gap-6"
-        >
+        <form onSubmit={handleAuthForm} className="w-full flex flex-col gap-6">
           {type === "signup" && (
             <InputField
               type="text"
               placeholder="Enter your Name"
               value={userData.name}
               onChange={handleChange("name")}
-              icon={"fi-sr-user"}
+              icon="fi-sr-user"
             />
           )}
           <InputField
@@ -131,16 +110,15 @@ const AuthForm = ({ type }) => {
             placeholder="Enter your Email"
             value={userData.email}
             onChange={handleChange("email")}
-            icon={"fi-rr-envelope"}
+            icon="fi-rr-envelope"
           />
           <InputField
             type="password"
             placeholder="Enter your Password"
             value={userData.password}
             onChange={handleChange("password")}
-            icon={"fi-rr-lock"}
+            icon="fi-rr-lock"
           />
-
           <button
             type="submit"
             className="w-full py-3 text-white bg-green-600 rounded-full text-lg hover:bg-green-700 transition-all duration-200"
@@ -149,28 +127,27 @@ const AuthForm = ({ type }) => {
           </button>
         </form>
 
-        <p className=" text-xl flex justify-center my-4 font-semibold w-full">or</p>
+        <p className="text-xl flex justify-center my-4 font-semibold w-full">or</p>
 
-        <div onClick={handleGoogleAuth} className="bg-white px-5 py-3 rounded-full w-full overflow-hidden flex gap-4  items-center hover:bg-green-100 justify-center cursor-pointer ">
+        <div
+          onClick={handleGoogleAuth}
+          className="bg-white px-5 py-3 rounded-full w-full overflow-hidden flex gap-4 items-center hover:bg-green-100 justify-center cursor-pointer"
+        >
           <p className="mt-[1px] text-2xl font-medium">Continue With</p>
-          <div>
-<img className="w-7 h-7 mt-1" src={googleIcon} alt="" />
-          </div>
-
-
+          <img className="w-7 h-7 mt-1" src={googleIcon} alt="Google Icon" />
         </div>
 
         <p className="text-center text-sm mt-6">
           {type === "signin" ? (
             <span onClick={clearOnClick}>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link to="/signup" className="text-blue-600 underline">
                 Sign Up
               </Link>
             </span>
           ) : (
             <span onClick={clearOnClick}>
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link to="/signin" className="text-blue-600 underline">
                 Sign In
               </Link>
