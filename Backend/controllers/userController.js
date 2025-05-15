@@ -30,6 +30,34 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
     
     )
   });
+  function generateVerificationEmail(verificationLink) {
+    return `
+    <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
+        <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
+          <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
+          <p style="font-size: 16px; color: #374151; margin-top: 24px;">
+            Hey there 👋,<br/><br/>
+            Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
+          </p>
+          <div style="text-align: center; margin: 36px 0;">
+            <a href="${verificationLink}"
+              style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
+              Verify Your Email
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #6b7280; text-align: center;">
+            If you didn't create a BlogSphere account, you can safely ignore this email.
+          </p>
+          <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
+          <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+            — BlogSphere Team
+          </p>
+        </div>
+      </div>
+ 
+    `;
+  }
+  
 
 
 // Function to create a new user
@@ -66,30 +94,7 @@ async function createUser(req, res) {
           from: process.env.EMAIL_USER,
           to: newUser.email,
           subject: "Verify your BlogSphere account",
-          html: `
-          <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
-            <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-              <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
-              <p style="font-size: 16px; color: #374151; margin-top: 24px;">
-                Hey there 👋,<br/><br/>
-                Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
-              </p>
-              <div style="text-align: center; margin: 36px 0;">
-                <a href="${FRONTEND_URL}/verify-email/${verificationToken}"
-                  style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                  Verify Your Email
-                </a>
-              </div>
-              <p style="font-size: 14px; color: #6b7280; text-align: center;">
-                If you didn't create a BlogSphere account, you can safely ignore this email.
-              </p>
-              <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
-              <p style="font-size: 13px; color: #9ca3af; text-align: center;">
-                — BlogSphere Team
-              </p>
-            </div>
-          </div>
-          `
+          html: generateVerificationEmail(`${FRONTEND_URL}/verify-email/${verificationToken}`)
         });
         
 
@@ -113,32 +118,9 @@ async function createUser(req, res) {
 
     const sendingMail = await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: checkForexistingUser.email,
+      to: newUser.email,
       subject: "Verify your BlogSphere account",
-      html: `
-      <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
-        <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-          <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
-          <p style="font-size: 16px; color: #374151; margin-top: 24px;">
-            Hey there 👋,<br/><br/>
-            Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
-          </p>
-          <div style="text-align: center; margin: 36px 0;">
-            <a href="${FRONTEND_URL}/verify-email/${verificationToken}"
-              style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
-              Verify Your Email
-            </a>
-          </div>
-          <p style="font-size: 14px; color: #6b7280; text-align: center;">
-            If you didn't create a BlogSphere account, you can safely ignore this email.
-          </p>
-          <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
-          <p style="font-size: 13px; color: #9ca3af; text-align: center;">
-            — BlogSphere Team
-          </p>
-        </div>
-      </div>
-      `
+      html: generateVerificationEmail(`${FRONTEND_URL}/verify-email/${verificationToken}`)
     });
     
  
