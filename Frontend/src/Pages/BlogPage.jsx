@@ -189,7 +189,7 @@ function BlogPage()  {
 
           {token && email === blogData.creator.email && (
             <Link to={"/edit/" + blogData.blogId}>
-              <button className="bg-green-400 mt-5 px-6 py-2 text-xl rounded ">
+              <button className="bg-green-400 cursor-pointer mt-5 px-6 py-2 text-xl rounded ">
                 Edit
               </button>
             </Link>
@@ -213,7 +213,7 @@ function BlogPage()  {
             <div className="flex gap-2">
               <i
                 onClick={() => dispatch(setIsOpen())}
-                className="fi fi-sr-comment-alt text-3xl mt-1"
+                className="fi fi-sr-comment-alt  cursor-pointer text-3xl mt-1"
               ></i>
               <p className="text-2xl">{comments.length}</p>
             </div>

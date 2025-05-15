@@ -386,7 +386,7 @@ return token == null ? (
     <div className="flex gap-4 mt-10">
       <button
         onClick={id ? handleUpdateBlog : handlePostBlog}
-        className="bg-black text-white font-semibold px-7 py-3 rounded-full hover:bg-gray-800 transition"
+        className="bg-black text-white cursor-pointer font-semibold px-7 py-3 rounded-full hover:bg-gray-800 transition"
       >
         {blogData.draft
           ? "Save as Draft"
@@ -396,7 +396,7 @@ return token == null ? (
       </button>
       <button
         onClick={() => navigate(-1)}
-        className="px-7 py-3 rounded-full border border-gray-300 text-gray-800 hover:bg-gray-100 transition"
+        className="px-7 py-3 rounded-full border cursor-pointer border-gray-300 text-gray-800 hover:bg-gray-100 transition"
       >
         Back
       </button>
