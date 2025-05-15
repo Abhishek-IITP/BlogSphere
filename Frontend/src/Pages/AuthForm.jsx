@@ -14,6 +14,7 @@ const AuthForm = ({ type }) => {
     email: "",
     password: "",
   });
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -45,19 +46,11 @@ const AuthForm = ({ type }) => {
 
   const handleGoogleAuth = async () => {
     try {
-      const user = await googleAuth();
-      if (user) {
-        const idToken = await user.getIdToken();
-        const res = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
-          { accessToken: idToken }
-        );
-        dispatch(login(res.data.user));
-        toast.success(res.data.message);
-        navigate("/");
-      }
+      // Just trigger redirect – do not handle result here
+      await googleAuth();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Google login failed");
+      toast.error("Google login failed");
+      console.error("Google login error:", error);
     }
   };
 
@@ -65,7 +58,7 @@ const AuthForm = ({ type }) => {
     setUserData({ name: "", email: "", password: "" });
   };
 
-  // ✅ Check for redirect result on page load
+  // ✅ Handle redirect result only here, ONCE
   useEffect(() => {
     const checkRedirect = async () => {
       try {
@@ -81,6 +74,7 @@ const AuthForm = ({ type }) => {
           navigate("/");
         }
       } catch (error) {
+        console.error("Redirect auth error:", error);
         toast.error("Authentication failed");
       }
     };
