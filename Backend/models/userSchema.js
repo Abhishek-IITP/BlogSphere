@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const {mongoose } = require("mongoose");
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema({
     },
     password: {
       type: String, 
+      required: function () {
+        return !this.googleAuth;
+      },
       select: false,
     },
     blogs : [
@@ -65,7 +68,7 @@ const userSchema = new mongoose.Schema({
         ref: "Blog"
       }
     ],
-    showLikeBlogs:{
+    showLikedBlogs:{
       type: Boolean,
       default : true,
     },

@@ -5,13 +5,13 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
     blog: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     likes: [
       {
@@ -19,6 +19,19 @@ const commentSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
+
+    parentComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+    },
+    
   },
   { timestamps: true }
 );
