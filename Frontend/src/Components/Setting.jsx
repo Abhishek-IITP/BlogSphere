@@ -40,6 +40,7 @@ function Setting() {
     }
   }
 
+  console.log(data)
   return token == null ? (
     <Navigate to={"/signin"} />
   ) : (
