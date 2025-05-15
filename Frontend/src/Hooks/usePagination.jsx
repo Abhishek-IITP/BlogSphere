@@ -10,6 +10,11 @@ function usePagination(path, queryParams = {}, limit = 1, page = 1) {
   const navigate = useNavigate();
   const [isLoading, startLoading, stopLoading] = useLoader();
   useEffect(() => {
+    setBlogs([]);
+    setHasMore(true);
+  }, [JSON.stringify(queryParams)]);
+  
+  useEffect(() => {
     async function fetchSeachBlogs() {
       try {
         startLoading();
@@ -31,7 +36,7 @@ function usePagination(path, queryParams = {}, limit = 1, page = 1) {
       }
     }
     fetchSeachBlogs();
-  }, [page]);
+  }, [page, JSON.stringify(queryParams)]);
 
   return { blogs, hasMore , isLoading};
 }
