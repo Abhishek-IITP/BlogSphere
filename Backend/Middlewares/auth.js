@@ -1,8 +1,6 @@
 const { verifyJWT } = require("../Utils/generateTokens");
 
 const verifyUser = async (req, res, next) => {
-
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
