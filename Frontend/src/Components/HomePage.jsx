@@ -1,137 +1,95 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-// import DisplayBlogs from "./DisplayBlogs";
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import DisplayBlogs from "./DisplayBlogs";
+import usePagination from "../Hooks/usePagination";
 import { Link } from "react-router-dom";
-import { formatDate } from "../Utils/formateDate";
-// import { handleSaveBlogClick } from "../Pages/BlogPage";
-import { useSelector, useDispatch } from "react-redux";
-import { changeLikes, changeSaves } from "../Utils/SelectedBlogSlice";
-import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
-const HomePage = () => {
-  const [blogs, setBlogs] = useState([]);
-  const { id: userId, token } = useSelector((state) => state.user);
-  const dispatch = useDispatch();
+function HomePage() {
+  const [page, setPage] = useState(1);
+  const loaderRef = useRef(null);
+  const { token } = useSelector((state) => state.user);
 
-  async function fetchBlogs() {
-    try {
-      let res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs`);
-      setBlogs(res.data.blogs);
-    } catch (error) {
-      toast.error("Error fetching blogs");
-    }
-  }
+  const { blogs, hasMore, isLoading } = usePagination("blogs", {}, 4, page);
 
-  async function handleLike(blogId, e) {
-    e.preventDefault();
-    if (!token) {
-      toast.error("Please login to like blogs");
-      return;
-    }
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/blogs/like/${blogId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      dispatch(changeLikes(userId));
-      toast.success(res.data.message);
-      // Refetch blogs to update the UI
-      fetchBlogs();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Error liking blog");
-    }
-  }
-
-  async function handleSave(blogId, e) {
-    e.preventDefault();
-    if (!token) {
-      toast.error("Please login to save blogs");
-      return;
-    }
-    try {
-      const res = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_URL}/save-blog/${blogId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      dispatch(changeSaves(blogId));
-      toast.success(res.data.message);
-      // Refetch blogs to update the UI
-      fetchBlogs();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Error saving blog");
-    }
-  }
-
-  // console.log(import.meta.env.VITE_BACKEND_URL)
-
+  // Infinite scroll observer
   useEffect(() => {
-    fetchBlogs();
-  }, []);
-  console.log(blogs)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [hasMore]);
 
   return (
-    <div className="w-[70%] mx-auto">
-      {blogs.map((blog, index) => (
-       console.log(blog.likes?.includes(userId)),
+    <div className="w-full max-w-screen-xl mx-auto pt-6 px-4 md:px-6 flex flex-col md:flex-row gap-10">
+      {/* Blog Section */}
+      <div className="w-full md:w-[72%]">
+        {!isLoading && blogs.length > 0 && <DisplayBlogs blogs={blogs} />}
 
-        <Link key={index} to={"blog/" + blog.blogId}>
-          <div
-            key={blog._id}
-            className=" w-full my-10 flex justify-between gap-2"
-          >
-            <div className="w-[60%] flex flex-col ">
-              <div>
-                {/* <img src="" alt="" /> */}
-                <p className="capitalize">{blog.creator.name}</p>
-              </div>
-              <h2 className="font-bold text-3xl capitalize">{blog.title}</h2>
-              <h4 className="line-clamp-2 capitalize">{blog.description}</h4>
-              <div className="flex gap-5">
-                <p>{formatDate(blog.createdAt)}</p>
-
-                <div className='flex gap-7 '>
-                  <div 
-                    className='flex gap-2 items-center cursor-pointer hover:scale-110 transition-transform' 
-                    onClick={(e) => handleLike(blog._id, e)}
-                  >
-                    {blog.likes?.includes(userId) ? (
-                      <i className="fi fi-rs-heart text-red-500 text-2xl"></i>
-                    ) : (
-                      <i className="fi fi-ss-heart text-black text-2xl hover:text-red-500 transition-colors"></i>
-                    )
-                    }
-              
-                    <p className='text-xl'>{blog.likes?.length || 0}</p>
-                  </div>
-                  <div className='flex gap-2 items-center'>
-                    <i className="fi fi-sr-comment-alt text-2xl"></i>
-                    <p className='text-xl'>{blog.comments?.length || 0}</p>
-                  </div>
-                  <div 
-                    className='flex gap-2 items-center cursor-pointer hover:scale-110 transition-transform' 
-                    onClick={(e) => handleSave(blog._id, e)}
-                  >
-                    {blog.totalSaves?.includes(userId) ? (
-                      <i className="fi fi-sr-bookmark text-2xl text-blue-500"></i>
-                    ) : (
-                      <i className="fi fi-rr-bookmark text-2xl hover:text-blue-500 transition-colors"></i>
-                    )}
-                    <p className='text-xl'>{blog.totalSaves?.length || 0}</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-            <div className="w-[30%]">
-              <img src={blog.image} alt="" className="w-full h-full object-cover rounded-lg" />
-            </div>
+        {/* Loader when loading more */}
+        {hasMore && (
+          <div ref={loaderRef} className="flex justify-center py-10">
+            <span className="loader" />
           </div>
-        </Link>
-      ))}
+        )}
+
+        {/* Initial loader */}
+        {isLoading && blogs.length === 0 && (
+          <div className="flex justify-center py-20">
+            <span className="loader scale-[1.2]" />
+          </div>
+        )}
+      </div>
+
+      {/* Sidebar Section */}
+      <div className="w-full md:w-[28%] border-t md:border-t-0 md:border-l pt-6 md:pt-0 md:pl-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          <h1 className="text-xl font-semibold text-gray-700 mb-6">
+            Trending Topics
+          </h1>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-4">
+            {[
+              "React",
+              "Node js",
+              "Mern",
+              "Express",
+              "Next.js",
+              "lifestyle",
+              "waterfall",
+              "couplegoal",
+            ].map((tag, index) => (
+              <Link key={index} to={`/tag/${tag}`}>
+                <motion.div
+                  whileHover={{
+                    scale: 1.05,
+                    backgroundColor: "#F3F4F6",
+                    color: "#059669",
+                  }}
+                  className="border border-gray-300 hover:border-gray-400 rounded-full px-4 py-2 text-sm font-medium text-gray-800 flex justify-center items-center cursor-pointer transition-all duration-300"
+                >
+                  {tag}
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
-};
+}
 
 export default HomePage;
