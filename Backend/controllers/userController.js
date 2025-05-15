@@ -64,7 +64,7 @@ async function createUser(req, res) {
       
         const sendingMail = await transporter.sendMail({
           from: process.env.EMAIL_USER,
-          to: checkForexistingUser.email,
+          to: newUser.email,
           subject: "Verify your BlogSphere account",
           html: `
           <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
