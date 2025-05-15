@@ -11,6 +11,7 @@ import { updateData } from '../Utils/UserSlice';
 
 
 export async function handleSaveBlogs(id, token) {
+  if(token){
     try {
       let res = await axios.patch(
         `${import.meta.env.VITE_BACKEND_URL}/save-blog/${id}`,
@@ -23,10 +24,14 @@ export async function handleSaveBlogs(id, token) {
       );
       toast.success(res.data.message);
   
-      // dispatch(addSlectedBlog(blog));
+      dispatch(addSelectedBlog(blog));
     } catch (error) {
       toast.error(error.response.data.message);
     }
+  }
+  else{
+    toast.error("Please SignIn...!!!")
+  }
   }
 
   export async function handleFollowCreator(id, token, dispatch) {
@@ -56,12 +61,10 @@ function BlogPage()  {
   const location = useLocation();
   const [isBlogSaved, setIsBlogSaved] = useState(false);
 
-
-  const { token, email, id: userId , profilePicture, following } = useSelector((state) => state.user);
+  const { token, email, id: userId , profilePicture,username, following } = useSelector((state) => state.user);
   const { likes, comments, content, creator } = useSelector((state) => state.SelectedBlog);
   const { isOpen } = useSelector((state) => state.comment);
 
-//   const isSaved = totalSaves?.includes(userId);
   const [blogData, setBlogData] = useState(null);
   const [isLike, setIsLike] = useState(false);
 
@@ -81,10 +84,12 @@ function BlogPage()  {
   }
 
   async function handleLike() {
-      
-      try {
-        if (!token) {
+    if(token){
 
+      try {
+        
+        if (token) {
+  
             setIsLike((prev) => !prev);
             let res = await axios.post(
               `${import.meta.env.VITE_BACKEND_URL}/blogs/like/${blogData._id}`,
@@ -94,9 +99,14 @@ function BlogPage()  {
             dispatch(changeLikes(userId));
             toast.success(res.data.message);
         }
-
+  
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred while liking the blog.");
+    }
+    }
+      
+    else{
+      toast.error("Please SigIN")
     }
   }
 
@@ -113,187 +123,67 @@ function BlogPage()  {
     };
   }, [id]);
 
-
-
-
   return (
-//     <>
-//       <div className='max-w-[700px] bg-[#F7F4ED] mx-auto px-4'>
-//         {blogData ? (
-//           <div>
-//             <h1 className='mt-10 font-bold text-6xl capitalize'>
-//              {blogData.title}
-//             </h1>
-//             <p className='my-5 text-3xl font-semibold capitalize'>
-//               {blogData.description}
-//             </p>
-                
-
-//             <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 transition-transform hover:scale-[1.02]">
-//   {/* Profile Picture */}
-//   <div className="relative group">
-//     <div className="w-14 h-14 rounded-full overflow-hidden cursor-pointer border-4 border-emerald-500 group-hover:border-purple-700 transition-all duration-300 shadow-md">
-//       <img
-//         src={
-//           profilePicture
-//             ? profilePicture
-//             : `https://api.dicebear.com/9.x/initials/svg?seed=${blogData.creator.name}`
-//         }
-//         alt="profile"
-//         className="w-full h-full object-fit"
-//       />
-//     </div>
-//     <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-ping"></div>
-//   </div>
-
-//   {/* User Info */}
-//   <div className="flex flex-col justify-center">
-//     <div className="flex items-center gap-2 mb-1">
-//       <h2 className="text-xl font-bold text-black capitalize hover:underline cursor-pointer drop-shadow-sm">
-//         {blogData.creator.name}
-//       </h2>
-//       <button onClick={()=> handleFollowCreator(blogData.creator._id , token)} className="text-xs cursor-pointer bg-black text-white px-3 py-1 rounded-full hover:bg-white hover:text-black border transition-all">
-//         Follow
-//       </button>
-//     </div>
-//     <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-//       <span className="flex items-center gap-1">
-//         <svg
-//           className="w-4 h-4 text-yellow-400"
-//           fill="currentColor"
-//           viewBox="0 0 24 24"
-//         >
-//           <path d="M12 3L15 10H22L16.5 14L19 21L12 17L5 21L7.5 14L2 10H9L12 3Z" />
-//         </svg>
-//         6 min read
-//       </span>
-//       <span>{formatDate(blogData.createdAt)}</span>
-//       <span>•</span>
-//       <span className="italic">Author spotlight</span>
-//     </div>
-//   </div>
-// </div>
-
-
-//             <img src={blogData.image} alt="" className='rounded-lg my-4' />
-
-//             {token && blogData?.creator?.email === email && (
-//               <Link to={`/edit/${blogData.blogId}`}>
-//                 <button className='bg-green-400 mt-5 px-6 py-2 text-xl rounded'>
-//                   Edit
-//                 </button>
-//               </Link>
-//             )}
-
-//             <div className='flex gap-7 mt-4'>
-//               <div className='cursor-pointer flex gap-2'>
-//                 {isLike ? (
-//                   <i onClick={handleLike} className="fi fi-ss-heart text-red-600 text-3xl mt-1"></i>
-//                 ) : (
-//                   <i onClick={handleLike} className="fi fi-rs-heart text-3xl mt-1"></i>
-//                 )}
-//                 <p className='text-3xl'>{likes?.length || 0}</p>
-//               </div>
-//               <div className='cursor-pointer flex gap-2'>
-//                 <i onClick={() => dispatch(setIsOpen())} className="fi fi-sr-comment-alt text-3xl mt-1"></i>
-//                 <p className='text-3xl'>{comments?.length || 0}</p>
-//               </div>
-//               <div className='flex gap-2 items-center' onClick={handleSaveBlogClick}>
-//                 {isSaved ? (
-//                   <i className="fi fi-sr-bookmark cursor-pointer text-3xl"></i>
-//                 ) : (
-//                   <i className="fi fi-rr-bookmark cursor-pointer text-3xl"></i>
-//                 )}
-//                 <p className='text-3xl'>{totalSaves?.length || 0}</p>
-//               </div>
-//             </div>
-
-//             <div className='my-10'>
-//               {content.blocks.map((block, index) => {
-//                 if (block.type === "header") {
-//                   const Tag = `h${block.data.level}`;
-//                   return (
-//                     <Tag
-//                       key={index}
-//                       className={`font-bold my-4 text-${5 - block.data.level}xl`}
-//                       dangerouslySetInnerHTML={{ __html: block.data.text }}
-//                     />
-//                   );
-//                 } else if (block.type === "paragraph") {
-//                   return (
-//                     <p key={index} className='my-4' dangerouslySetInnerHTML={{ __html: block.data.text }} />
-//                   );
-//                 } else if (block.type === "image") {
-//                   return (
-//                     <div key={index} className='my-4 text-center'>
-//                       <img src={block.data.file.url} alt="" className='mx-auto' />
-//                       <p className='text-center my-2'>{block.data.caption}</p>
-//                     </div>
-//                   );
-//                 }
-//                 return null;
-//               })}
-//             </div>
-//           </div>
-//         ) : (
-//           <h1 className='text-3xl font-semibold mt-10'>Loading...</h1>
-//         )}
-//       </div>
-
-//       {isOpen && <Comment />}
-//     </>
-
-
     <div className="max-w-[700px] mx-auto p-5 ">
       {blogData ? (
         <div>
-          <h1 className="mt-10 font-bold text-3xl  sm:text-4xl lg:text-6xl capitalize">
+          <h1 className="mt-10 font-bold text-3xl  my-3 sm:text-4xl lg:text-6xl capitalize">
             {blogData.title}
           </h1>
 
-          <div className="flex items-center my-5 gap-3">
-            <Link to={`/@${blogData.creator.username}`}>
-              <div>
-                <div className="w-10 h-10 cursor-pointer aspect-square rounded-full overflow-hidden">
-                  <img
-                    src={
-                      blogData?.creator?.profilePic
-                        ? blogData?.creator?.profilePic
-                        : `https://api.dicebear.com/9.x/initials/svg?seed=${blogData.creator.name}`
-                    }
-                    alt=""
-                    className="rounded-full w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </Link>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1 ">
-                <Link to={`/@${blogData.creator.username}`}>
-                  <h2 className="text-xl hover:underline cursor-pointer">
-                    {blogData.creator.name}
-                  </h2>
-                </Link>
-                {userId !== blogData.creator._id && (
-                  <p
-                    onClick={() =>
-                      handleFollowCreator(blogData.creator._id, token, dispatch)
-                    }
-                    className="text-xl my-2 font-medium text-green-700 cursor-pointer"
-                  >
-                    .
-                    {!following?.includes(creator?._id)
-                      ? "follow"
-                      : "following"}
-                  </p>
-                )}
-              </div>
-              <div>
-                <span>6 min read</span>
-                <span className="mx-2">{formatDate(blogData.createdAt)}</span>
-              </div>
-            </div>
-          </div>
+          <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 transition-transform transform hover:scale-[1.01] hover:translate-y-[-2px]">
+  {/* Profile Picture */}
+  <div className="relative group ">
+    <div className="w-14 h-14 rounded-full overflow-hidden cursor-pointer border-4 border-emerald-500 group-hover:border-purple-700 transition-all duration-300 shadow-md">
+      <img
+        src={
+          blogData?.creator?.profilePicture
+            ? blogData?.creator?.profilePicture
+            : `https://api.dicebear.com/9.x/initials/svg?seed=${blogData.creator.name}`
+        }
+        alt="profile"
+        className="w-full h-full object-cover"
+      />
+    </div>
+    <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-ping"></div>
+  </div>
+
+  {/* User Info */}
+  <div className="flex flex-col justify-center ">
+    <div className="flex items-center gap-2 mb-1">
+      <Link to={`/@${blogData.creator.username}`}>
+      <h2 className="text-xl font-bold text-black capitalize hover:underline cursor-pointer drop-shadow-sm">
+        {blogData.creator.name}
+      </h2>
+      </Link>
+      {userId !== blogData.creator._id && (
+        <button
+          onClick={() => handleFollowCreator(blogData.creator._id, token, dispatch)}
+          className="text-xs cursor-pointer bg-black text-white px-3 py-1 rounded-full hover:bg-white hover:text-black border transition-all"
+        >
+          {!following?.includes(blogData.creator._id) ? "Follow" : "Following"}
+        </button>
+      )}
+    </div>
+    <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+      <span className="flex items-center gap-1">
+        <svg
+          className="w-4 h-4 text-yellow-400"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 3L15 10H22L16.5 14L19 21L12 17L5 21L7.5 14L2 10H9L12 3Z" />
+        </svg>
+        6 min read
+      </span>
+      <span>{formatDate(blogData.createdAt)}</span>
+      <span>•</span>
+      <span className="italic">Author spotlight</span>
+    </div>
+  </div>
+</div>
+
+
 
           <img src={blogData.image} alt="" />
 
@@ -309,12 +199,12 @@ function BlogPage()  {
               {isLike ? (
                 <i
                   onClick={handleLike}
-                  className="fi fi-sr-thumbs-up text-blue-600 text-3xl mt-1"
+                  className="fi fi-sr-heart text-red-600 text-3xl mt-1"
                 ></i>
               ) : (
                 <i
                   onClick={handleLike}
-                  className="fi fi-rr-social-network text-3xl mt-1"
+                  className="fi fi-rr-heart text-3xl mt-1"
                 ></i>
               )}
               <p className="text-2xl">{likes.length}</p>
@@ -332,7 +222,9 @@ function BlogPage()  {
               onClick={(e) => {
                 e.preventDefault();
                 handleSaveBlogs(blogData._id, token);
-                setIsBlogSaved((prev) => !prev);
+                if(token){
+                  setIsBlogSaved((prev) => !prev);
+                }
               }}
             >
               {isBlogSaved ? (
@@ -344,7 +236,9 @@ function BlogPage()  {
           </div>
 
           <div className="my-10">
-            {content.blocks.map((block, index) => {
+            {
+              content?.blocks?.length > 0 &&
+            content.blocks.map((block, index) => {
               if (block.type == "header") {
                 if (block.data.level == 2) {
                   return (
@@ -407,6 +301,8 @@ function BlogPage()  {
               }
             })}
           </div>
+
+          
         </div>
       ) : (
         <div className="flex justify-center items-center w-full h-[calc(100vh-500px)]">
@@ -416,6 +312,7 @@ function BlogPage()  {
 
       {isOpen && <Comment />}
     </div>
+
   );
 
 };

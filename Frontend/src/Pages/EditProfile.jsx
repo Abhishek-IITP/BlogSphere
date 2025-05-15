@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 import { login } from "../Utils/UserSlice";
+import useLoader from "../Hooks/useLoader";
 
 function EditProfile() {
   const {
@@ -18,7 +19,7 @@ function EditProfile() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-//   const [isLoading, startLoading, stopLoading] = useLoader();
+  const [isLoading, startLoading, stopLoading] = useLoader();
 
   const [userData, setUserData] = useState({
     profilePicture,
@@ -46,7 +47,7 @@ function EditProfile() {
   }
 
   async function handleUpdateProfile() {
-    // startLoading();
+    startLoading();
     setIsButtonDisabled(true);
     const formData = new FormData();
     formData.append("name", userData.name);
@@ -72,9 +73,9 @@ function EditProfile() {
     } catch (error) {
       toast.error(error.response.data.message);
     } 
-    // finally {
-    //   stopLoading();
-    // }
+    finally {
+      stopLoading();
+    }
   }
 
   useEffect(() => {
@@ -169,7 +170,7 @@ function EditProfile() {
             />
           </div>
 
-
+          {!isLoading ? (
             <div>
               <button
                 disabled={isButtonDisabled}
@@ -187,6 +188,9 @@ function EditProfile() {
                 Back
               </button>
             </div>
+            ): (
+              <span className="loader"></span>
+            )}
           
         </div>
       </div>
