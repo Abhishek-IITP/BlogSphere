@@ -234,7 +234,7 @@ function BlogPage()  {
             </div>
           </div>
 
-          <div className="my-10">
+          {/* <div className="my-10">
             {
               content?.blocks?.length > 0 &&
             content.blocks.map((block, index) => {
@@ -299,7 +299,113 @@ function BlogPage()  {
                 }
               }
             })}
-          </div>
+          </div> */}
+<div className="my-10">
+  {content?.blocks?.length > 0 &&
+    content.blocks.map((block, index) => {
+      switch (block.type) {
+        case "header": {
+          const Tag = `h${block.data.level}`;
+          const sizeMap = {
+            2: "text-4xl",
+            3: "text-3xl",
+            4: "text-2xl",
+          };
+          return (
+            <Tag
+              key={index}
+              className={`font-bold ${sizeMap[block.data.level] || "text-xl"} my-4`}
+              dangerouslySetInnerHTML={{ __html: block.data.text }}
+            />
+          );
+        }
+
+        case "paragraph":
+          return (
+            <p
+              key={index}
+              className="my-4"
+              dangerouslySetInnerHTML={{ __html: block.data.text }}
+            />
+          );
+
+        case "list": {
+          const ListTag = block.data.style === "ordered" ? "ol" : "ul";
+          return (
+            <ListTag key={index} className="my-4 ml-6 list-inside list-disc">
+              {block.data.items.map((item, idx) => (
+                <li
+                  key={idx}
+                  dangerouslySetInnerHTML={{ __html: item }}
+                />
+              ))}
+            </ListTag>
+          );
+        }
+
+        case "code":
+          return (
+            <pre key={index} className="bg-gray-100 p-4 rounded-md overflow-x-auto my-4">
+              <code>{block.data.code}</code>
+            </pre>
+          );
+
+        case "image":
+          return (
+            <div key={index} className="my-4">
+              <img src={block.data.file.url} alt="Editor content" className="mx-auto" />
+              {block.data.caption && (
+                <p className="text-center mt-2 text-gray-500">{block.data.caption}</p>
+              )}
+            </div>
+          );
+
+        case "embed":
+          return (
+            <div
+              key={index}
+              className="my-4"
+              dangerouslySetInnerHTML={{ __html: block.data.embed }}
+            />
+          );
+
+        case "raw":
+          return (
+            <div
+              key={index}
+              className="my-4"
+              dangerouslySetInnerHTML={{ __html: block.data.html }}
+            />
+          );
+
+        case "table":
+          return (
+            <div key={index} className="overflow-x-auto my-4">
+              <table className="table-auto border border-collapse w-full">
+                <tbody>
+                  {block.data.content.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {row.map((cell, cellIndex) => (
+                        <td
+                          key={cellIndex}
+                          className="border px-4 py-2"
+                          dangerouslySetInnerHTML={{ __html: cell }}
+                        />
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    })}
+</div>
+
+
 
           
         </div>
