@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Blog = require("../models/blogSchema");
 const Comment = require("../models/commentSchema");
 
@@ -46,7 +47,7 @@ async function addComment(req, res) {
       });
     }
   }
-  
+
   async function deleteComment(req, res) {
     try {
       const userId = req.user;
@@ -91,9 +92,7 @@ async function addComment(req, res) {
       await Blog.findByIdAndUpdate(comment.blog._id, {
         $pull: { comments: id },
       });
-      // await Comment.findByIdAndDelete(id);
-  
-      // await comment.deleteOne();
+
   
       return res.status(200).json({
         success: true,
@@ -108,12 +107,11 @@ async function addComment(req, res) {
     }
   }
 
-
   async function editComment(req, res) {
     try {
       const userId = req.user; //kon kr rha h
       const { id } = req.params; //kispe kr rha h... comment ki id h
-      const { updateComment } = req.body; //kya kr rha h
+      const { updatedCommentContent } = req.body; //kya kr rha h
   
         const comment = await Comment.findById(id)
 
@@ -130,12 +128,18 @@ async function addComment(req, res) {
             })
         }
 
-        await Comment.findByIdAndUpdate(id,{comment: updateComment})
+        const updatedComment = await Comment.findByIdAndUpdate(id,{comment: updatedCommentContent},{ new: true }).then((comment) => {
+          return comment.populate({
+            path: "user",
+            select: "name email",
+          });
+        });
 
 
       return res.status(200).json({
         success: true,
         message: "Comment updated successfully",
+        updatedComment,
       });
   
     } catch (err) {
@@ -148,8 +152,8 @@ async function addComment(req, res) {
 
   async function likeComment(req, res) {
     try {
-      const { id } = req.params;
       const userId = req.user;
+      const { id } = req.params;
   
       const comment = await Comment.findById(id);
       if (!comment) {
@@ -179,13 +183,63 @@ async function addComment(req, res) {
       }
     }
 
-  
-  
+    async function addNestedComment(req, res) {
+      try {
+        const userId = req.user;
 
+        const { id: blogId, parentCommentId } = req.params;
+    
+        const { reply } = req.body;
+    
+        const comment = await Comment.findById(parentCommentId);
+    
+        const blog = await Blog.findById(blogId);
+
+        if (!comment) {
+          return res.status(500).json({
+            message: "parent comment is not found",
+          });
+        }
+    
+        if (!blog) {
+          return res.status(500).json({
+            message: "Blog is not found",
+          });
+        }
+        const newReply = await Comment.create({
+          blog: blogId,
+          comment: reply,
+          parentComment: parentCommentId,
+          user: userId,
+        }).then((reply) => {
+          return reply.populate({
+            path: "user",
+            select: "name email",
+          });
+        });
+
+        await Comment.findByIdAndUpdate(parentCommentId, {
+          $push: { replies: newReply._id },
+        });
+    
+        return res.status(200).json({
+          success: true,
+          message: "Reply added successfully",
+          newReply,
+        });
+      
+    }  catch (error) {
+      return res.status(500).json({
+        message: error.message,
+      });
+    }
+  }
 
   module.exports = {
     addComment,
     deleteComment,
     editComment,
-    likeComment
+    likeComment,
+    addNestedComment,
+
   };

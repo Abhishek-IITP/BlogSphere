@@ -2,9 +2,6 @@ const Blog = require("../models/blogSchema");
 const Comment = require("../models/commentSchema");
 const User = require("../models/userSchema");
 const {uploadImage , deleteImageFromCloudinary} = require("../Utils/uploadImage");
-const fs = require ("fs")
-const user= require("../controllers/userController")
-const uniqueId= require("uniqid")
 const ShortUniqueId= require('short-unique-id')
 const {randomUUID}= new ShortUniqueId({length:10})
 
@@ -15,6 +12,7 @@ async function createBlogs(req, res) {
     const { title, description  } = req.body;
     const draft = req.body.draft == "false" ? false : true;
     const {image ,images } = req.files;
+    // console.log("image:", image)
 
     const content= JSON.parse(req.body.content);
     const tags = JSON.parse(req.body.tags);
@@ -72,7 +70,6 @@ async function createBlogs(req, res) {
       blogId,
       content,
       tags,
-
     });
     await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
     
@@ -110,7 +107,7 @@ async function getBlogs(req, res) {
       })
       .populate({
         path: "likes",
-        select: "email  name",
+        select: "email name",
       })      
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -145,6 +142,35 @@ async function getBlogsById(req, res) {
       path :"creator",
       select:"name email followers username profilePicture"
     }).lean();
+
+    async function populateReplies(comments) {
+      for (const comment of comments) {
+        let populatedComment = await Comment.findById(comment._id)
+          .populate({
+            path: "replies",
+            populate: {
+              path: "user",
+              select: "name email username profilePicture",
+            },
+          })
+          .lean();
+
+        comment.replies = populatedComment.replies;
+
+        if (comment.replies && comment.replies.length > 0) {
+          await populateReplies(comment.replies);
+        }
+      }
+      return comments;
+    }
+    blog.comments = await populateReplies(blog.comments);
+
+    if (!blog) {
+      return res.status(404).json({
+        message: "Blog Not found",
+      });
+    }
+
   
     return res.status(200).json({
       message: "Blog Fetched Successfully",
@@ -188,15 +214,19 @@ async function updateBlogs(req, res) {
       });
     }
 
-    let imageToDelete = blog.content.blocks.filter((block)=> block.type == "image").filter((block)=> !existingImages.find(({url})=> url == block.data.file.url)).map((block)=> block.data.file.imageId);
 
+    let imagesToDelete = blog.content.blocks
+      .filter((block) => block.type == "image")
+      .filter(
+        (block) => !existingImages.find(({ url }) => url == block.data.file.url)
+      )
+      .map((block) => block.data.file.imageId);
 
     if(req.files.images){
       let imageIndex =0;
       for(let i=0; i<content.blocks.length ; i++){
         const block = content.blocks[i];
         if(block.type === 'image' && block.data.file.image){
-  
           const {secure_url , public_id} = await uploadImage(
             `data:image/jpeg;base64,${req.files.images[imageIndex].buffer.toString("base64")}`
           )
@@ -208,16 +238,16 @@ async function updateBlogs(req, res) {
         }
       }
     }
-
- 
-    if(req.files.image){
+    if (req?.files?.image) {
       await deleteImageFromCloudinary(blog.imageId);
-      const { secure_url, public_id } = await uploadImage(`data:image/jpeg;base64,${req?.files?.image[0]?.buffer?.toString("base64")}`);
+      const { secure_url, public_id } = await uploadImage(
+        `data:image/jpeg;base64,${req?.files?.image[0]?.buffer?.toString(
+          "base64"
+        )}`
+      );
       blog.image = secure_url;
       blog.imageId = public_id;
-
     }
-    
 
     blog.title = title || blog.title;
     blog.description = description || blog.description;
@@ -235,7 +265,6 @@ async function updateBlogs(req, res) {
       });
     }
 
-    // Save the updated blog
 
     return res.status(200).json({
       success: true,
@@ -256,6 +285,7 @@ async function deleteBlogs(req, res) {
     const creator = req.user;
 
     const blog = await Blog.findById(id);
+
     if (!blog) {
       return res.status(500).json({
         message: "Blog is not Found.",
@@ -325,7 +355,6 @@ async function deleteBlogs(req, res) {
 // Funtion to save blogs
  /**4 */
  async function likeBlog(req, res) {
-  console.log("first")
   try {
     const user = req.user;
     const { id } = req.params;
@@ -455,10 +484,10 @@ async function searchBlogs(req, res) {
 
 module.exports = {
   createBlogs,
+  deleteBlogs,
   getBlogs,
   getBlogsById,
   updateBlogs,
-  deleteBlogs,
   likeBlog,
   saveBlog,
   searchBlogs,
