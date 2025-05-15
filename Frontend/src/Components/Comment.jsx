@@ -46,7 +46,7 @@ function Comment() {
 
   return (
    
-    <div className="fixed top-[71px] right-0 w-full sm:min-w-[400px] sm:w-[400px] h-[calc(100vh-71px)] bg-white border-l border-gray-200 shadow-2xl z-50 overflow-y-auto transition-all duration-300 ease-in-out font-['Segoe_UI']">
+    <div className="fixed top-[71px] right-0 w-full sm:min-w-[430px] sm:w-[400px] h-[calc(100vh-71px)] bg-white border-l border-gray-200 shadow-2xl z-50 overflow-y-auto transition-all duration-300 ease-in-out font-['Segoe_UI']">
     <div className="p-5">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-3">
@@ -176,30 +176,35 @@ function CommentCard({
       toast.error(error.response.data.message);
     }
   };
+  const { username } = useSelector((state) => state.user);
 
   console.log(comment)
   return (
     <div className="py-6 border-b border-gray-100">
       <div className="flex items-start gap-4">
-        {comment.user.profilePicture==null ? (
-          <img
-            src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`}
-            alt="user"
-            className="w-9 h-9 rounded-full"
-          />
-        ) : (
-          <img
-            src={comment.user.profilePicture}
-            alt="user"
-            className="w-9 h-9 rounded-full"
-          />
-        )}
-  
+
+          {comment.user && comment.user.profilePicture ? (
+  <img
+    src={comment.user.profilePicture}
+    alt="user"
+    className="w-9 h-9 rounded-full"
+  />
+) : (
+  <img
+    src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user?.name || 'User'}`}
+    alt="user"
+    className="w-9 h-9 rounded-full"
+  />
+)}
+
+
         <div className="flex-1">
           <div className="flex justify-between items-center text-sm">
+            <Link to={`/@${username}`}>
             <span className="text-gray-900 font-medium capitalize">
               {comment.user?.name || 'Deleted User'}
             </span>
+            </Link>
             <span className="text-gray-500">{formatDate(comment.createdAt)}</span>
           </div>
   
@@ -210,7 +215,7 @@ function CommentCard({
           <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
             <button
               onClick={() => handleCommentLike(comment._id)}
-              className="flex items-center gap-1 hover:text-red-500 transition"
+              className="flex items-center cursor-pointer gap-1 hover:text-red-500 transition"
             >
               {comment?.likes?.includes(userId) ? (
                 <i className="fi fi-ss-heart text-red-500"></i>
@@ -222,7 +227,7 @@ function CommentCard({
   
             <button
               onClick={() => setActiveReply(activeReply === comment._id ? null : comment._id)}
-              className="hover:underline hover:text-blue-600 transition"
+              className="hover:underline cursor-pointer hover:text-blue-600 transition"
             >
               Reply
             </button>
@@ -234,7 +239,7 @@ function CommentCard({
                     setCurrentPopup(currentPopup === comment._id ? null : comment._id)
                   }
                 >
-                  <i className="fi fi-br-menu-dots text-gray-500 hover:text-gray-800"></i>
+                  <i className="fi fi-br-menu-dots cursor-pointer text-gray-500 hover:text-gray-800"></i>
                 </button>
   
                 {currentPopup === comment._id && (
