@@ -27,13 +27,15 @@
     "@tailwindcss/vite": "^4.1.4",
     "axios": "^1.8.4",
     "firebase": "^11.6.1",
-    "framer-motion": "^12.11.0",
+    "framer-motion": "^12.11.4",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.510.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.5.0",
+    "tailwind-scrollbar-hide": "^2.0.0",
     "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
