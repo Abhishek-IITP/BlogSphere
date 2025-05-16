@@ -4,15 +4,16 @@ import DisplayBlogs from "./DisplayBlogs";
 import usePagination from "../Hooks/usePagination";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function HomePage() {
   const [page, setPage] = useState(1);
   const loaderRef = useRef(null);
+  const scrollRef = useRef(null);
   const { token } = useSelector((state) => state.user);
 
   const { blogs, hasMore, isLoading } = usePagination("blogs", {}, 4, page);
 
-  // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -29,64 +30,139 @@ function HomePage() {
     };
   }, [hasMore]);
 
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
+
+  const tags = [
+    "React",
+    "Node.js",
+    "MERN",
+    "Express",
+    "Next.js",
+    "Lifestyle",
+    "Waterfall",
+    "CoupleGoals",
+    "JavaScript",
+    "UI/UX",
+    "Firebase",
+  ];
+
+  // Drag to scroll setup
+  useEffect(() => {
+    const container = scrollRef.current;
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    const handleMouseDown = (e) => {
+      isDown = true;
+      container.classList.add("active");
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      container.classList.remove("active");
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      container.classList.remove("active");
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 2;
+      container.scrollLeft = scrollLeft - walk;
+    };
+
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
   return (
-    <div className="w-full max-w-screen-xl mx-auto pt-6 px-4 md:px-6 flex flex-col md:flex-row gap-10">
-      {/* Blog Section */}
-      <div className="w-full md:w-[72%]">
-        {!isLoading && blogs.length > 0 && <DisplayBlogs blogs={blogs} />}
-
-        {/* Loader when loading more */}
-        {hasMore && (
-          <div ref={loaderRef} className="flex justify-center py-10">
-            <span className="loader" />
+    <div className="w-full max-w-screen-xl mx-auto pt-6 px-4 md:px-6">
+      {/* Trending Topics Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="sticky top-7 z-10 bg-white pt-2 pb-4 border-b border-gray-200"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Trending Topics</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={scrollLeft}
+              className="p-1 rounded-full hover:bg-gray-100 transition"
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              onClick={scrollRight}
+              className="p-1 rounded-full hover:bg-gray-100 transition"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight size={22} />
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Initial loader */}
-        {isLoading && blogs.length === 0 && (
-          <div className="flex justify-center py-20">
-            <span className="loader scale-[1.2]" />
-          </div>
-        )}
-      </div>
-
-      {/* Sidebar Section */}
-      <div className="w-full md:w-[28%] border-t md:border-t-0 md:border-l pt-6 md:pt-0 md:pl-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto overflow-y-hidden scroll-drag scrollbar-none scroll-smooth px-1"
         >
-          <h1 className="text-xl font-semibold text-gray-700 mb-6">
-            Trending Topics
-          </h1>
+          {tags.map((tag, index) => (
+            <Link key={index} to={`/tag/${tag}`}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="whitespace-nowrap bg-gray-100 hover:bg-green-400 hover:text-white text-gray-800 font-semibold rounded-full px-5 py-2 text-sm shadow-sm transition-all duration-300 cursor-pointer"
+              >
+                #{tag}
+              </motion.div>
+            </Link>
+          ))}
+        </div>
+      </motion.div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-4">
-            {[
-              "React",
-              "Node js",
-              "Mern",
-              "Express",
-              "Next.js",
-              "lifestyle",
-              "waterfall",
-              "couplegoal",
-            ].map((tag, index) => (
-              <Link key={index} to={`/tag/${tag}`}>
-                <motion.div
-                  whileHover={{
-                    scale: 1.05,
-                    backgroundColor: "#F3F4F6",
-                    color: "#059669",
-                  }}
-                  className="border border-gray-300 hover:border-gray-400 rounded-full px-4 py-2 text-sm font-medium text-gray-800 flex justify-center items-center cursor-pointer transition-all duration-300"
-                >
-                  {tag}
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
+      {/* Main Layout */}
+      <div className="flex flex-col md:flex-row gap-10 mt-6">
+        {/* Blog Feed */}
+        <div className="w-full mx-auto md:w-[72%]">
+          {!isLoading && blogs.length > 0 && <DisplayBlogs blogs={blogs} />}
+
+          {hasMore && (
+            <div ref={loaderRef} className="flex justify-center py-10">
+              <span className="loader" />
+            </div>
+          )}
+
+          {isLoading && blogs.length === 0 && (
+            <div className="flex justify-center py-20">
+              <span className="loader scale-[1.2]" />
+            </div>
+          )}
+        </div>
+
+
       </div>
     </div>
   );
