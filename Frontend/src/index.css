@@ -20,3 +20,12 @@ body {
     transform: rotate(360deg);
   }
 }
+.scroll-drag::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-drag {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+  cursor: grab;
+}
