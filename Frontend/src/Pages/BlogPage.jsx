@@ -2,13 +2,35 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { addSelectedBlog, changeLikes, removeSelectedBlog } from '../Utils/SelectedBlogSlice';
 import { setIsOpen } from '../Utils/commnetSlice';
 import Comment from '../Components/Comment';
 import { formatDate } from '../Utils/formateDate';
 import { updateData } from '../Utils/UserSlice';
 
+// Function to calculate read time
+function calculateReadTime(content) {
+  if (!content || !content.blocks) return 0;
+  
+  // Count words in all text blocks
+  const wordCount = content.blocks.reduce((count, block) => {
+    if (block.type === 'paragraph' || block.type === 'header') {
+      // Remove HTML tags and count words
+      const text = block.data.text.replace(/<[^>]*>/g, '');
+      return count + text.split(/\s+/).length;
+    }
+    return count;
+  }, 0);
+
+  // Average reading speed (words per minute)
+  const wordsPerMinute = 100;
+  
+  // Calculate minutes and round up
+  const readTime = Math.ceil(wordCount / wordsPerMinute);
+  
+  return readTime;
+}
 
 export async function handleSaveBlogs(id, token) {
   if(token){
@@ -57,8 +79,10 @@ export async function handleSaveBlogs(id, token) {
 function BlogPage()  {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
   const [isBlogSaved, setIsBlogSaved] = useState(false);
+  const [readTime, setReadTime] = useState(0);
 
   const { token, email, id: userId , profilePicture,username, following } = useSelector((state) => state.user);
   const { likes, comments, content, creator } = useSelector((state) => state.SelectedBlog);
@@ -73,6 +97,11 @@ function BlogPage()  {
       setBlogData(blog);
       setIsBlogSaved(blog?.totalSaves?.includes(userId));
       dispatch(addSelectedBlog(blog));
+      
+      // Calculate read time when blog data is fetched
+      if (blog.content) {
+        setReadTime(calculateReadTime(blog.content));
+      }
       
       if (blog.likes.includes(userId)) {
         setIsLike((prev) => !prev);
@@ -109,7 +138,24 @@ function BlogPage()  {
     }
   }
 
-
+  async function handleDeleteBlog() {
+    if (window.confirm("Are you sure you want to delete this blog?")) {
+      try {
+        const res = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/blogs/${blogData._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.success(res.data.message);
+        navigate("/");
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Error deleting blog");
+      }
+    }
+  }
 
   useEffect(() => {
     fetchBlogsById();
@@ -173,7 +219,7 @@ function BlogPage()  {
         >
           <path d="M12 3L15 10H22L16.5 14L19 21L12 17L5 21L7.5 14L2 10H9L12 3Z" />
         </svg>
-        6 min read
+        {readTime} min read
       </span>
       <span>{formatDate(blogData.createdAt)}</span>
       <span>•</span>
@@ -187,11 +233,19 @@ function BlogPage()  {
           <img src={blogData.image} alt="" />
 
           {token && email === blogData.creator.email && (
-            <Link to={"/edit/" + blogData.blogId}>
-              <button className="bg-green-400 cursor-pointer mt-5 px-6 py-2 text-xl rounded ">
-                Edit
+            <div className="flex gap-4 mt-5">
+              <Link to={"/edit/" + blogData.blogId}>
+                <button className="bg-green-400 cursor-pointer px-6 py-2 text-xl rounded hover:bg-green-500 transition">
+                  Edit
+                </button>
+              </Link>
+              <button 
+                onClick={handleDeleteBlog}
+                className="bg-red-500 text-white cursor-pointer px-6 py-2 text-xl rounded hover:bg-red-600 transition"
+              >
+                Delete
               </button>
-            </Link>
+            </div>
           )}
           <div className="flex gap-7 mt-4">
             <div className="cursor-pointer flex gap-2 ">
