@@ -134,7 +134,7 @@ function ProfilePage() {
                           : "text-gray-600"
                       } text-lg font-semibold hover:text-gray-900 transition duration-300 ease-in-out`}
                     >
-                      Drafts
+                      Draft
                     </Link>
                   </li>
                 )}
