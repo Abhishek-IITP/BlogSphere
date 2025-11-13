@@ -4,7 +4,7 @@ BlogSphere is a full-featured, modern blogging platform built with the **MERN st
 
 ## 🎥 Project Demo Video
 
-[![Watch Demo](https://drive.google.com/file/d/1f9kaADR5I_2y3BFNrQeuL1_XhGhAvTu8/view?usp=sharing)](https://drive.google.com/file/d/1N02jlLaoljnLxigEttE7kJdYIBePBaHe/view?usp=sharing)
+(https://drive.google.com/file/d/1N02jlLaoljnLxigEttE7kJdYIBePBaHe/view?usp=sharing)
 
 *Click the image above to watch the demo video.*
 
