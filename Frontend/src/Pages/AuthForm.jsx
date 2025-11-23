@@ -23,10 +23,14 @@ const AuthForm = ({ type }) => {
   const handleAuthForm = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/${type}`,
-        userData
-      );
+      const url = `${import.meta.env.VITE_BACKEND_URL}/${type}`;
+      if (import.meta.env.DEV) {
+        // Dev logging to help diagnose failing requests
+        // eslint-disable-next-line no-console
+        console.log("Auth request ->", { url, payload: userData });
+      }
+
+      const { data } = await axios.post(url, userData);
 
       if (type === "signup") {
         toast.success(data.message);
@@ -37,6 +41,10 @@ const AuthForm = ({ type }) => {
         navigate("/");
       }
     } catch (error) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error("Auth error ->", error);
+      }
       toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       setUserData({

@@ -6,6 +6,7 @@ const ShortUniqueId= require('short-unique-id')
 const {randomUUID}= new ShortUniqueId({length:5})
 const admin = require("firebase-admin");
 const {getAuth} = require ("firebase-admin/auth")
+const nodemailer = require('nodemailer');
 const {
   deleteImageFromCloudinary,
   uploadImage,
@@ -13,58 +14,72 @@ const {
 require ('dotenv').config()
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      "type": process.env.FIREBASE_TYPE,
-      "project_id": process.env.FIREBASE_PROJECT_ID ,
-      "private_key_id": process.env.FIREBASE_PRIVATE_KEY_ID ,
-      "private_key": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') ,
-      "client_email": process.env.FIREBASE_CLIENT_EMAIL,
-      "client_id": process.env.FIREBASE_CLIENT_ID,
-      "auth_uri": process.env.FIREBASE_AUTH_URI,
-      "token_uri": process.env.FIREBASE_TOKEN_URI,
-      "auth_provider_x509_cert_url": process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URI,
-      "client_x509_cert_url":  process.env.FIREBASE_CLIENT_X509_CERT_URL,
-      "universe_domain": process.env.FIREBASE_UNIVERSAL_DOMAIN
-    }
-    
-    )
-  });
-  function generateVerificationEmail(verificationLink) {
-    return `
-    <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
-        <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-          <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
-          <p style="font-size: 16px; color: #374151; margin-top: 24px;">
-            Hey there 👋,<br/><br/>
-            Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
-          </p>
-          <div style="text-align: center; margin: 36px 0;">
-            <a href="${verificationLink}"
-              style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
-              Verify Your Email
-            </a>
-          </div>
-          <p style="font-size: 14px; color: #6b7280; text-align: center;">
-            If you didn't create a BlogSphere account, you can safely ignore this email.
-          </p>
-          <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
-          <p style="font-size: 13px; color: #9ca3af; text-align: center;">
-            — BlogSphere Team
-          </p>
-        </div>
-      </div>
- 
-    `;
+admin.initializeApp({
+  credential: admin.credential.cert({
+    "type": process.env.FIREBASE_TYPE,
+    "project_id": process.env.FIREBASE_PROJECT_ID ,
+    "private_key_id": process.env.FIREBASE_PRIVATE_KEY_ID ,
+    "private_key": process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') ,
+    "client_email": process.env.FIREBASE_CLIENT_EMAIL,
+    "client_id": process.env.FIREBASE_CLIENT_ID,
+    "auth_uri": process.env.FIREBASE_AUTH_URI,
+    "token_uri": process.env.FIREBASE_TOKEN_URI,
+    "auth_provider_x509_cert_url": process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URI,
+    "client_x509_cert_url":  process.env.FIREBASE_CLIENT_X509_CERT_URL,
+    "universe_domain": process.env.FIREBASE_UNIVERSAL_DOMAIN
   }
-  
+  )
+});
+
+function generateVerificationEmail(verificationLink) {
+  return `
+  <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
+      <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
+        <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
+        <p style="font-size: 16px; color: #374151; margin-top: 24px;">
+          Hey there 👋,<br/><br/>
+          Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
+        </p>
+        <div style="text-align: center; margin: 36px 0;">
+          <a href="${verificationLink}"
+            style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
+            Verify Your Email
+          </a>
+        </div>
+        <p style="font-size: 14px; color: #6b7280; text-align: center;">
+          If you didn't create a BlogSphere account, you can safely ignore this email.
+        </p>
+        <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
+        <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+          — BlogSphere Team
+        </p>
+      </div>
+    </div>
+
+  `;
+}
+
+// Helper to send email without throwing to caller (log errors)
+async function safeSendMail(mailOptions) {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Verification email sent to', mailOptions.to);
+    try {
+      const preview = nodemailer.getTestMessageUrl ? nodemailer.getTestMessageUrl(info) : null;
+      if (preview) console.log('Preview URL (ethereal):', preview);
+    } catch (e) {
+      // ignore preview errors
+    }
+  } catch (err) {
+    console.error('Failed to send email to', mailOptions.to, '-', err && err.message ? err.message : err);
+  }
+}
 
 
 // Function to create a new user
 async function createUser(req, res) {
   const { name, email, password } = req.body;
 
-  
   try {
     if (!name || !email ) {
       return res.status(400).json({
@@ -74,35 +89,35 @@ async function createUser(req, res) {
     }
     const checkForexistingUser = await User.findOne({ email });
     if (checkForexistingUser) {
-      if(checkForexistingUser.googleAuth){
+      if (checkForexistingUser.googleAuth) {
         return res.status(400).json({
           message: "This Email is already Registered with google. Please continue with Google",
           success: false,
-  
-        })
+        });
       }
-      if(checkForexistingUser.isVerify){
+
+      if (checkForexistingUser.isVerify) {
         return res.status(400).json({
           message: "User already exists with this email",
           success: false,
         });
-      }
-      else{
+      } else {
+        // User exists but is not verified -> resend verification
         let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
-      
-        const sendingMail = await transporter.sendMail({
+        const verificationLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+        console.log('Verification link (resend, local):', verificationLink);
+
+        await safeSendMail({
           from: process.env.EMAIL_USER,
-          to: newUser.email,
+          to: checkForexistingUser.email,
           subject: "Verify your BlogSphere account",
-          html: generateVerificationEmail(`${FRONTEND_URL}/verify-email/${verificationToken}`)
+          html: generateVerificationEmail(verificationLink),
         });
-        
 
         return res.status(200).json({
-          success : true,
-          message : "Please Check Your Email to Verify Your Account"
-        })
-     
+          success: true,
+          message: "Please Check Your Email to Verify Your Account",
+        });
       }
     }
 
@@ -113,21 +128,20 @@ async function createUser(req, res) {
     const newUser = await User.create({ name, email, password: hashedPassword , username });
     let verificationToken = await generateJWT({email: newUser.email , id : newUser._id })
 
-    // EMAIL LOGIC
+    const verificationLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+    console.log('Verification link (new user, local):', verificationLink);
 
-
-    const sendingMail = await transporter.sendMail({
+    // EMAIL LOGIC: send verification link (don't fail signup if email sending fails)
+    await safeSendMail({
       from: process.env.EMAIL_USER,
       to: newUser.email,
       subject: "Verify your BlogSphere account",
-      html: generateVerificationEmail(`${FRONTEND_URL}/verify-email/${verificationToken}`)
+      html: generateVerificationEmail(verificationLink),
     });
-    
- 
+
     return res.status(200).json({
       message: "Please Check Your Email to Verify your Account",
       success: true,
-  
     });
   } catch (err) {
     // console.log("Email sending failed:", err.message)
@@ -249,7 +263,6 @@ async function googleAuth(req, res) {
 async function login(req, res) {
   const { email, password } = req.body;
 
-  
   try {
     if (!email || !password) {
       return res.status(400).json({
@@ -257,6 +270,7 @@ async function login(req, res) {
         success: false,
       });
     }
+
     const checkForexistingUser = await User.findOne({ email }).select(
       "password isVerify name email profilePicture username bio showLikedBlogs showSavedBlogs followers following googleAuth"
     );
@@ -264,7 +278,6 @@ async function login(req, res) {
       return res.status(400).json({
         message: "User does not exist with this email",
         success: false,
-
       });
     }
 
@@ -272,60 +285,38 @@ async function login(req, res) {
       return res.status(400).json({
         message: "This Email is already Registered with google. Please continue with Google",
         success: false,
-
       })
     }
-    const checkForPass = await bcrypt.compare(password, checkForexistingUser.password); 
+
+    // If user is not verified, prompt verification before checking password
+    if (!checkForexistingUser.isVerify) {
+      let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
+      const verificationLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+
+      // print link to server console for local testing
+      console.log('Verification link (local):', verificationLink);
+
+      await safeSendMail({
+        from: process.env.EMAIL_USER,
+        to: checkForexistingUser.email,
+        subject: "Verify your BlogSphere account",
+        html: generateVerificationEmail(verificationLink),
+      });
+
+      return res.status(400).json({
+        message: "Please verify your email.",
+        success: false,
+      });
+    }
+
+    // Comparing the entered password with the hashed password in the database
+    const checkForPass = await bcrypt.compare(password, checkForexistingUser.password);
     if (!checkForPass) {
       return res.status(401).json({
         message: "Incorrect password",
         success: false,
       });
     }
-
-
-    if (!checkForexistingUser.isVerify) {
-      let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
-      
-      const sendingMail = await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: checkForexistingUser.email,
-        subject: "Verify your BlogSphere account",
-        html: `
-        <div style="font-family: 'Segoe UI', sans-serif; background: #f1f5f9; padding: 40px;">
-          <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-            <h2 style="color: #1f2937; font-weight: 700; text-align: center;">Welcome to <span style="color: #22c55e;">BlogSphere</span>!</h2>
-            <p style="font-size: 16px; color: #374151; margin-top: 24px;">
-              Hey there 👋,<br/><br/>
-              Thanks for signing up! Please confirm your email address by clicking the button below to activate your account.
-            </p>
-            <div style="text-align: center; margin: 36px 0;">
-              <a href="${FRONTEND_URL}/verify-email/${verificationToken}"
-                style="background: #22c55e; color: #fff; padding: 14px 28px; font-size: 16px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                Verify Your Email
-              </a>
-            </div>
-            <p style="font-size: 14px; color: #6b7280; text-align: center;">
-              If you didn't create a BlogSphere account, you can safely ignore this email.
-            </p>
-            <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
-            <p style="font-size: 13px; color: #9ca3af; text-align: center;">
-              — BlogSphere Team
-            </p>
-          </div>
-        </div>
-        `
-      });
-      
-    
-      return res.status(400).json({
-        message: "Please verify your email.",
-        success: false,
-      });
-    }
-    
-
-    // Comparing the entered password with the hashed password in the database
 
     let token = await generateJWT({ id: checkForexistingUser._id, email: checkForexistingUser.email });
     return res.status(200).json({
@@ -520,16 +511,25 @@ async function followUser(req,res){
       });
     }
 
-    if (!user.followers.includes(followerId)) {
-      await User.findByIdAndUpdate(id, { $set: { followers: followerId } });
-      await User.findByIdAndUpdate(followerId, { $set: { following: id } });
+    // Normalize ids to strings for reliable comparison
+    const followerIdStr = String(followerId);
+    const existingFollowers = (user.followers || []).map((f) => String(f));
+
+    if (!existingFollowers.includes(followerIdStr)) {
+      // Add followerId to the target user's followers array and add target id
+      // to the follower's following array. Use $addToSet to avoid duplicates.
+      await User.findByIdAndUpdate(id, { $addToSet: { followers: followerId } });
+      await User.findByIdAndUpdate(followerId, { $addToSet: { following: id } });
+
       return res.status(200).json({
         success: true,
         message: "Followed successfully",
       });
     } else {
-      await User.findByIdAndUpdate(id, { $unset: { followers: followerId } });
-      await User.findByIdAndUpdate(followerId, { $unset: { following: id } });
+      // Remove followerId from followers and remove target id from following
+      await User.findByIdAndUpdate(id, { $pull: { followers: followerId } });
+      await User.findByIdAndUpdate(followerId, { $pull: { following: id } });
+
       return res.status(200).json({
         success: true,
         message: "Unfollowed",
