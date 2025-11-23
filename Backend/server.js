@@ -20,8 +20,12 @@ app.get("/",(req,res)=>{
   res.send("Hello jii...kya haal h")
 })
 // Server
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
-  dbConnect();
-  cloudinaryConfig();
+const PORT = process.env.PORT || 3000;
+
+// Initialize services (DB, Cloudinary) before starting the server
+dbConnect();
+cloudinaryConfig();
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

@@ -199,7 +199,7 @@ function CommentCard({
 
         <div className="flex-1">
           <div className="flex justify-between items-center text-sm">
-            <Link to={`/@${username}`}>
+            <Link to={`/@${comment.user.username}`}>
             <span className="text-gray-900 font-medium capitalize">
               {comment.user?.name || 'Deleted User'}
             </span>
