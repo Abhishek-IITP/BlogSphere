@@ -32,7 +32,7 @@ const Navbar = () => {
         setIsMobileMenuOpen(false);
       }
     };
-  }, [window.location.pathname]);
+  }, []);
 
   return (
     <>

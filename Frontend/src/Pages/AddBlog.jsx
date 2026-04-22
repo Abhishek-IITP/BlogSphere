@@ -21,7 +21,7 @@ import useLoader from "../Hooks/useLoader"
 const AddBlog = () => {
   const { id } = useParams();
   const editorjsRef= useRef(null);
-  const [isLoading, startLoading, stopLoading] = useLoader();
+  const [ startLoading, stopLoading] = useLoader();
   const formData= new FormData();
   const {token}= useSelector(slice=>slice.user)
   const {title, description, image, content,draft,tags}= useSelector(slice => slice.SelectedBlog)
@@ -120,86 +120,81 @@ const AddBlog = () => {
     }
   }
 
-  async function fetchBlogsById() {
-    try {
-          setBlogData(
-            {
-                title: title,
-                description: description,
-                image: image,
-                content: content,
-                draft: draft,
-                tags: tags,
-            })
-        
-    } catch (error) {
-        toast.error(error.response.data.message)       
-    }
-}
-function intilizeEditorjs(){
-  editorjsRef.current= new EditorJS({
-    holder : "editorjs",
-    placeholder : "Write Something....",
+const fetchBlogsById = React.useCallback(() => {
+  try {
+    setBlogData({
+      title: title,
+      description: description,
+      image: image,
+      content: content,
+      draft: draft,
+      tags: tags,
+    });
+  } catch (error) {
+    toast.error(error.response.data.message);
+  }
+}, [title, description, image, content, draft, tags]);
+
+const intilizeEditorjs = React.useCallback(() => {
+  editorjsRef.current = new EditorJS({
+    holder: "editorjs",
+    placeholder: "Write Something....",
     data: content,
     tools: {
-      header : {
+      header: {
         class: Header,
         inlineToolbar: true,
-        config:{
+        config: {
           placeholder: "Enter Your Heading...",
-          levels: [2,3,4],
+          levels: [2, 3, 4],
           defaultLevel: 3,
         },
       },
-      List : {
-        class : NestedList,
+      List: {
+        class: NestedList,
         config: {},
         inlineToolbar: true,
       },
       code: CodeTool,
-      Marker : Marker,
+      Marker: Marker,
       Underline: Underline,
-     embed: Embed,
-     raw: RawTool,
-     textVariant: TextVariantTune,
-     image: {
-      class:ImageTool,
-      config:{
-        uploader:{
-          uploadByFile: async(image)=>{
+      embed: Embed,
+      raw: RawTool,
+      textVariant: TextVariantTune,
+      image: {
+        class: ImageTool,
+        config: {
+          uploader: {
+            uploadByFile: async (image) => {
               return {
                 success: 1,
                 file: {
                   url: URL.createObjectURL(image),
                   image,
-                }
+                },
               };
-
+            },
           },
-        }
-      }
-
-
-     },
-     table: {
-      class: Table,
-      inlineToolbar: true,
-      config: {
-        rows: 2,
-        cols: 3,
-        maxRows: 5,
-        maxCols: 5,
+        },
+      },
+      table: {
+        class: Table,
+        inlineToolbar: true,
+        config: {
+          rows: 2,
+          cols: 3,
+          maxRows: 5,
+          maxCols: 5,
+        },
       },
     },
+    tunes: ["textVariant"],
+    onChange: async () => {
+      let data = await editorjsRef.current.save();
+      setBlogData((blogData) => ({ ...blogData, content: data }));
     },
-    tunes: ['textVariant'],
-    onChange: async()=>{
-      let data = await editorjsRef.current.save()
-      setBlogData((blogData)=>({...blogData, content: data}))
-       
-    }
-  })
-}
+  });
+}, [content]);
 
 function handleKeyDown(e) {
   const tag = e.target.value.toLowerCase();
@@ -236,7 +231,7 @@ function deleteTag(index) {
         if(id){
             fetchBlogsById();
         }
-    },[id])
+    },[fetchBlogsById,id])
 
     useEffect(()=>{
       if(editorjsRef.current===null){
@@ -251,7 +246,7 @@ function deleteTag(index) {
         }
     }
 
-    }, [])
+    }, [intilizeEditorjs,dispatch,id])
 
 return token == null ? (
   <Navigate to="/signin" />

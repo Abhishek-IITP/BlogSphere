@@ -17,7 +17,7 @@ const UserSlice= createSlice({
             localStorage.setItem("user", JSON.stringify({ followers: [], following: [], ...action.payload }))
             return { followers: [], following: [], ...action.payload };
         },
-        logout(state,action){
+        logout(){
             localStorage.removeItem("user")
             return {   
                 token : null

@@ -4,7 +4,7 @@ import DisplayBlogs from "./DisplayBlogs";
 import usePagination from "../Hooks/usePagination";
 
 function SearchBlogs() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { tag } = useParams();
   const [page, setPage] = useState(1);
 

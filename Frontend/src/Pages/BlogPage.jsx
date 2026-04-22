@@ -2,7 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { addSelectedBlog, changeLikes, removeSelectedBlog } from '../Utils/SelectedBlogSlice';
 import { setIsOpen } from '../Utils/commnetSlice';
 import Comment from '../Components/Comment';
@@ -46,7 +46,7 @@ export async function handleSaveBlogs(id, token) {
       );
       toast.success(res.data.message);
   
-      dispatch(addSelectedBlog(blog));
+      // dispatch(addSelectedBlog(blog));
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -80,18 +80,17 @@ function BlogPage()  {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isBlogSaved, setIsBlogSaved] = useState(false);
   const [readTime, setReadTime] = useState(0);
 
-  const { token, email, id: userId , profilePicture,username, following } = useSelector((state) => state.user);
-  const { likes, comments, content, creator } = useSelector((state) => state.SelectedBlog);
+  const { token, email, id: userId , following } = useSelector((state) => state.user);
+  const { likes, comments, content, } = useSelector((state) => state.SelectedBlog);
   const { isOpen } = useSelector((state) => state.comment);
 
   const [blogData, setBlogData] = useState(null);
   const [isLike, setIsLike] = useState(false);
 
-  async function fetchBlogsById() {
+  const fetchBlogsById = React.useCallback(async () => {
     try {
       let { data: { blog } } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`);
       setBlogData(blog);
@@ -109,7 +108,26 @@ function BlogPage()  {
     } catch (error) {
       toast.error(error.message);
     }
-  }
+  }, [id, userId, dispatch]);
+  // async function fetchBlogsById() {
+  //   try {
+  //     let { data: { blog } } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`);
+  //     setBlogData(blog);
+  //     setIsBlogSaved(blog?.totalSaves?.includes(userId));
+  //     dispatch(addSelectedBlog(blog));
+      
+  //     // Calculate read time when blog data is fetched
+  //     if (blog.content) {
+  //       setReadTime(calculateReadTime(blog.content));
+  //     }
+      
+  //     if (blog.likes.includes(userId)) {
+  //       setIsLike((prev) => !prev);
+  //     }
+  //   } catch (error) {
+  //     toast.error(error.message);
+  //   }
+  // }
 
   async function handleLike() {
     if(token){
@@ -166,7 +184,7 @@ function BlogPage()  {
         dispatch(removeSelectedBlog());
       }
     };
-  }, [id]);
+  }, [id, dispatch, fetchBlogsById]);
 
   return (
     <div className="max-w-[700px] mx-auto p-5 ">

@@ -176,7 +176,7 @@ function CommentCard({
       toast.error(error.response.data.message);
     }
   };
-  const { username } = useSelector((state) => state.user);
+  // const { username } = useSelector((state) => state.user);
 
   return (
     <div className="py-6 border-b border-gray-100">

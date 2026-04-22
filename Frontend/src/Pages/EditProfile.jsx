@@ -28,7 +28,7 @@ function EditProfile() {
     bio,
   });
 
-  const [initialData, setInitialData] = useState({
+  const [initialData] = useState({
     profilePicture,
     username,
     name,

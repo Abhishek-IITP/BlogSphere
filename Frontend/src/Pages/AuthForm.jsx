@@ -25,8 +25,6 @@ const AuthForm = ({ type }) => {
     try {
       const url = `${import.meta.env.VITE_BACKEND_URL}/${type}`;
       if (import.meta.env.DEV) {
-        // Dev logging to help diagnose failing requests
-        // eslint-disable-next-line no-console
         console.log("Auth request ->", { url, payload: userData });
       }
 
@@ -42,7 +40,6 @@ const AuthForm = ({ type }) => {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
         console.error("Auth error ->", error);
       }
       toast.error(error?.response?.data?.message || "Something went wrong");
@@ -96,7 +93,7 @@ const AuthForm = ({ type }) => {
           navigate("/");
         }
       } catch (error) {
-        toast.error("Authentication failed");
+        toast.error("Authentication failed",error.message);
       }
     };
 
