@@ -1,31 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "@flaticon/flaticon-uicons/css/all/all";
 @import "tailwindcss";
 
+/* ── Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #faf7f2;
+  color: #1e1b18;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* loader in global styles */
+/* ── Custom scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #faf7f2; }
+::-webkit-scrollbar-thumb { background: #d4b896; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a0783c; }
+
+/* ── Custom Dot Grid ──────────────────────────────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(circle, #ddd0bc 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Floating Animation ────────────────────────────────────────────── */
+@keyframes float-gentle {
+  0% { transform: translateY(0px) rotate(var(--rot-start, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--rot-mid, 0deg)); }
+  100% { transform: translateY(0px) rotate(var(--rot-start, 0deg)); }
+}
+
+.animate-float-1 {
+  --rot-start: -4deg;
+  --rot-mid: -2deg;
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  --rot-start: 4deg;
+  --rot-mid: 6deg;
+  animation: float-gentle 7s ease-in-out infinite 0.5s;
+}
+
+.animate-float-3 {
+  --rot-start: -2deg;
+  --rot-mid: 0deg;
+  animation: float-gentle 8s ease-in-out infinite 1s;
+}
+
+/* ── Animated line drawing ────────────────────────────────────────── */
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-draw-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Spinner / loader ──────────────────────────────────────────────── */
 .loader {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #10b981; /* Tailwind green-500 */
+  border: 4px solid #e8dfd0;
+  border-top: 4px solid #d4a956;
   border-radius: 50%;
   width: 36px;
   height: 36px;
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.scroll-drag::-webkit-scrollbar {
-  display: none;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Custom dynamic transitions ────────────────────────────────────── */
+.transition-smooth {
+  transition: all 500ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.scroll-drag {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
-  cursor: grab;
+/* ── Raw HTML Block Renderer ───────────────────────────────────────── */
+/* Restores default browser-level element styles inside Editor.js raw
+   HTML blocks, since Tailwind's preflight/reset strips them.           */
+.raw-html-content {
+  line-height: 1.7;
+}
+.raw-html-content h1 {
+  font-size: 2em;
+  font-weight: 800;
+  margin: 0.67em 0;
+  font-family: 'Playfair Display', serif;
+  color: #1e1b18;
+}
+.raw-html-content h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.83em 0;
+  font-family: 'Playfair Display', serif;
+  color: #1e1b18;
+}
+.raw-html-content h3 {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin: 1em 0;
+  font-family: 'Playfair Display', serif;
+  color: #1e1b18;
+}
+.raw-html-content h4, .raw-html-content h5, .raw-html-content h6 {
+  font-weight: 600;
+  margin: 1em 0;
+  color: #1e1b18;
+}
+.raw-html-content p {
+  margin: 1em 0;
+}
+.raw-html-content a {
+  color: #c84b31;
+  text-decoration: underline;
+}
+.raw-html-content a:hover {
+  color: #a0371d;
+}
+.raw-html-content ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+.raw-html-content ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin: 1em 0;
+}
+.raw-html-content li {
+  margin: 0.25em 0;
+}
+.raw-html-content blockquote {
+  border-left: 3px solid #c84b31;
+  padding-left: 1em;
+  margin: 1.5em 0;
+  color: #5a4e40;
+  font-style: italic;
+}
+.raw-html-content pre {
+  background: #1e1b18;
+  color: #faf7f2;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1em 0;
+  font-family: monospace;
+  font-size: 0.875em;
+}
+.raw-html-content code {
+  background: #f0ebe3;
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+.raw-html-content pre code {
+  background: none;
+  padding: 0;
+}
+.raw-html-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+.raw-html-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+.raw-html-content th, .raw-html-content td {
+  border: 1px solid #e5dfd3;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.raw-html-content th {
+  background: #fcfbfa;
+  font-weight: 700;
+}
+.raw-html-content hr {
+  border: none;
+  border-top: 1px solid #e5dfd3;
+  margin: 2em 0;
+}
+.raw-html-content strong, .raw-html-content b {
+  font-weight: 700;
+}
+.raw-html-content em, .raw-html-content i {
+  font-style: italic;
 }

@@ -78,78 +78,10 @@ async function safeSendMail(mailOptions) {
 
 // Function to create a new user
 async function createUser(req, res) {
-  const { name, email, password } = req.body;
-
-  try {
-    if (!name || !email ) {
-      return res.status(400).json({
-        message: "Please provide all required fields",
-        success: false,
-      });
-    }
-    const checkForexistingUser = await User.findOne({ email });
-    if (checkForexistingUser) {
-      if (checkForexistingUser.googleAuth) {
-        return res.status(400).json({
-          message: "This Email is already Registered with google. Please continue with Google",
-          success: false,
-        });
-      }
-
-      if (checkForexistingUser.isVerify) {
-        return res.status(400).json({
-          message: "User already exists with this email",
-          success: false,
-        });
-      } else {
-        // User exists but is not verified -> resend verification
-        let verificationToken = await generateJWT({ email: checkForexistingUser.email, id: checkForexistingUser._id });
-        const verificationLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
-        console.log('Verification link (resend, local):', verificationLink);
-
-        await safeSendMail({
-          from: process.env.EMAIL_USER,
-          to: checkForexistingUser.email,
-          subject: "Verify your BlogSphere account",
-          html: generateVerificationEmail(verificationLink),
-        });
-
-        return res.status(200).json({
-          success: true,
-          message: "Please Check Your Email to Verify Your Account",
-        });
-      }
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const username = email.split("@")[0] + randomUUID();
-
-    const newUser = await User.create({ name, email, password: hashedPassword , username });
-    let verificationToken = await generateJWT({email: newUser.email , id : newUser._id })
-
-    const verificationLink = `${FRONTEND_URL}/verify-email/${verificationToken}`;
-    console.log('Verification link (new user, local):', verificationLink);
-
-    // EMAIL LOGIC: send verification link (don't fail signup if email sending fails)
-    await safeSendMail({
-      from: process.env.EMAIL_USER,
-      to: newUser.email,
-      subject: "Verify your BlogSphere account",
-      html: generateVerificationEmail(verificationLink),
-    });
-
-    return res.status(200).json({
-      message: "Please Check Your Email to Verify your Account",
-      success: true,
-    });
-  } catch (err) {
-    // console.log("Email sending failed:", err.message)
-    return res.status(500).json({
-      message: "Server error",
-      success: false,
-    });
-  }
+  return res.status(400).json({
+    message: "Email and password signup is no longer supported. Please register using Google.",
+    success: false,
+  });
 }
 
 async function verifyEmail(req,res) {
@@ -210,6 +142,7 @@ async function googleAuth(req, res) {
                   bio: user.bio,
                   followers: user.followers,
                   following: user.following,
+                  socialLinks: user.socialLinks,
                   token,
                 }
               });
@@ -245,6 +178,7 @@ async function googleAuth(req, res) {
               bio: newUser.bio,
               followers: newUser.followers,
               following: newUser.following,
+              socialLinks: newUser.socialLinks,
               token,
             }
           });
@@ -272,7 +206,7 @@ async function login(req, res) {
     }
 
     const checkForexistingUser = await User.findOne({ email }).select(
-      "password isVerify name email profilePicture username bio showLikedBlogs showSavedBlogs followers following googleAuth"
+      "password isVerify name email profilePicture username bio showLikedBlogs showSavedBlogs followers following googleAuth socialLinks"
     );
     if (!checkForexistingUser) {
       return res.status(400).json({
@@ -333,6 +267,7 @@ async function login(req, res) {
         showSavedBlogs: checkForexistingUser.showSavedBlogs,
         followers: checkForexistingUser.followers,
         following: checkForexistingUser.following,
+        socialLinks: checkForexistingUser.socialLinks,
         token,
       },
     });
@@ -414,7 +349,7 @@ async function updateUser(req, res) {
   
   try {
     const id = req.params.id;
-    const { name, username, bio } = req.body;
+    const { name, username, bio, twitter, instagram, github, website, youtube } = req.body;
     const image = req.file;
     const user = await User.findById(id);
 
@@ -448,6 +383,13 @@ async function updateUser(req, res) {
     user.username = username;
     user.bio = bio;
     user.name = name;
+    user.socialLinks = {
+      twitter: twitter || "",
+      instagram: instagram || "",
+      github: github || "",
+      website: website || "",
+      youtube: youtube || ""
+    };
 
     await user.save();
 
@@ -459,6 +401,7 @@ async function updateUser(req, res) {
         profilePicture: user.profilePicture,
         bio: user.bio,
         username: user.username,
+        socialLinks: user.socialLinks,
       },
     });
   } catch (err) {

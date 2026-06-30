@@ -23,7 +23,7 @@ function VerifyUser() {
       }
     }
     verifyUser();
-  }, [verificationToken]);
+  }, [verificationToken,navigate]);
   return <div>VerifyUser</div>;
 }
 

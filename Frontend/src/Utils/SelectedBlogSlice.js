@@ -12,7 +12,7 @@ const SelectedBlogSlice = createSlice({
       localStorage.setItem("SelectedBlog", JSON.stringify(action.payload));
       return action.payload;
     },
-    removeSelectedBlog(state, action) {
+    removeSelectedBlog() {
       localStorage.removeItem("SelectedBlog");
       return {};
     },
