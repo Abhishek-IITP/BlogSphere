@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../Utils/UserSlice';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Feather, Search, Edit3, LogOut, User, Settings, Menu, X } from 'lucide-react';
+import Footer from './Footer';
 
 const Navbar = () => {
   const { token, name, profilePicture, username } = useSelector((state) => state.user);
   const [showPopup, setShowPopup] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const menuItemClass =
-    'text-sm md:text-base px-4 py-2 hover:bg-green-500 hover:text-white transition-colors duration-200 cursor-pointer';
+  const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   function handleLogout() {
     dispatch(logout());
@@ -22,177 +32,222 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   }
 
-  useEffect(() => {
-    if (window.location.pathname !== '/search') {
-      setSearchQuery(null);
-    }
-    return () => {
-      if (window.location.pathname !== '/') {
-        setShowPopup(false);
-        setIsMobileMenuOpen(false);
-      }
-    };
-  }, []);
-
   return (
     <>
-      <div className="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center h-[70px] px-4 md:px-8 relative">
-          {/* Left: Logo */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link to="/">
-              <h1 className="text-2xl font-extrabold tracking-tight text-gray-800 font-serif hover:text-green-500 transition">
+      {/* ─── EDITORIAL NAVBAR ──────────────────────────────────── */}
+      <nav
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-[#faf7f2]/92 backdrop-blur-lg border-b border-[#e5dfd3] py-3 shadow-[0_1px_12px_rgba(100,80,50,0.06)]'
+            : 'bg-transparent border-b border-transparent py-4'
+        }`}
+        style={{ fontFamily: "'Outfit', sans-serif" }}
+      >
+        <div className="max-w-[1500px] mx-auto px-6">
+
+          {/* ─── DESKTOP LAYOUT: 3-Column Grid ─── */}
+          <div className="hidden md:grid grid-cols-3 items-center">
+
+            {/* Left Column: Navigation Links */}
+            <div className="flex items-center gap-7">
+              {token ? (
+                <Link to="/" className="text-[13.5px] font-semibold text-[#5a4e40] hover:text-[#c84b31] transition">
+                  Feed
+                </Link>
+              ) : (
+                <a
+                  href="#publications"
+                  onClick={(e) => { e.preventDefault(); document.getElementById("publications")?.scrollIntoView({ behavior: "smooth" }); }}
+                  className="text-[13.5px] font-semibold text-[#5a4e40] hover:text-[#c84b31] transition cursor-pointer font-serif italic"
+                >
+                  Trending
+                </a>
+              )}
+            </div>
+
+            {/* Center Column: Brand Logo */}
+            <Link to="/" className="flex items-center justify-center gap-2.5 group">
+              <div className="w-7 h-7 rounded-full bg-[#c84b31] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Feather size={13} />
+              </div>
+              <span className="text-[22px] font-bold tracking-tight text-[#1e1b18] font-serif">
                 BlogSphere
-              </h1>
+              </span>
             </Link>
 
-            {/* Search Bar */}
-            <div
-              className={`relative transition-all duration-200 ${
-                showSearchBar ? 'block max-sm:absolute max-sm:top-16 max-sm:left-4 max-sm:right-4 max-sm:z-40' : 'hidden sm:block'
-              }`}
-            >
-              <i className="fi fi-rs-search absolute top-1/2 left-4 -translate-y-1/2 text-gray-500"></i>
-              <input
-                type="text"
-                placeholder="Search"
-                className="bg-gray-100 text-sm pl-10 pr-4 py-2 rounded-full w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-green-400"
-                value={searchQuery || ''}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    setShowSearchBar(false);
-                    navigate(`/search?q=${searchQuery.trim()}`);
-                    setSearchQuery('');
-                  }
-                }}
-              />
+            {/* Right Column: Actions */}
+            <div className="flex items-center justify-end gap-4">
+              {token ? (
+                <>
+                  {/* Search: Always open search bar */}
+                  <div className="relative flex items-center w-full max-w-[180px] lg:max-w-[210px]">
+                    <Search size={14} className="absolute left-3 text-[#8a7e70] pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search articles..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.trim()) {
+                          navigate(`/search?q=${searchQuery.trim()}`);
+                          setSearchQuery('');
+                        }
+                      }}
+                      className="w-full bg-[#f0e8dc] border border-[#e5dfd3] text-[12px] pl-8 pr-3.5 py-1.5 rounded-full outline-none text-[#1e1b18] focus:border-[#c84b31] transition"
+                    />
+                  </div>
+
+                  {/* Write CTA */}
+                  <Link to="/add-blog" className="flex-shrink-0">
+                    <button className="bg-[#1e1b18] hover:bg-[#c84b31] text-white text-[12px] font-bold px-4 py-2 rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm">
+                      <Edit3 size={12} /> Write
+                    </button>
+                  </Link>
+
+                  {/* Profile Avatar */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={() => setShowPopup(p => !p)}
+                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#e5dfd3] hover:border-[#c84b31] hover:scale-105 transition-all cursor-pointer"
+                    >
+                      <img
+                        src={profilePicture || `https://api.dicebear.com/9.x/initials/svg?seed=${name}`}
+                        alt="avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+
+                    {/* Profile popup */}
+                    <AnimatePresence>
+                      {showPopup && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          onMouseLeave={() => setShowPopup(false)}
+                          className="absolute right-0 mt-3 w-52 bg-white border border-[#e5dfd3] rounded-2xl shadow-[0_8px_30px_rgba(100,80,50,0.08)] overflow-hidden z-50 p-2"
+                        >
+                          <Link
+                            to={`/@${username}`}
+                            onClick={() => setShowPopup(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#faf7f2] text-[13px] font-semibold text-[#1e1b18] transition"
+                          >
+                            <User size={14} className="text-[#a08060]" /> Profile
+                          </Link>
+                          <Link
+                            to="/setting"
+                            onClick={() => setShowPopup(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#faf7f2] text-[13px] font-semibold text-[#1e1b18] transition"
+                          >
+                            <Settings size={14} className="text-[#a08060]" /> Settings
+                          </Link>
+                          <div className="h-px bg-[#e5dfd3] my-1" />
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#fff0ed] text-[13px] font-bold text-red-500 transition cursor-pointer text-left"
+                          >
+                            <LogOut size={14} /> Log out
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link to="/signin" className="text-[13px] font-bold text-[#5a4e40] hover:text-[#c84b31] px-3 py-2 transition">
+                    Sign in
+                  </Link>
+                  <Link to="/signup">
+                    <button className="bg-[#1e1b18] hover:bg-[#c84b31] text-[#faf7f2] hover:text-white text-[13px] font-bold px-5 py-2.5 rounded-full shadow-sm hover:shadow transition duration-200 cursor-pointer">
+                      Join free
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Right: Desktop Nav */}
-          <div className="hidden sm:flex items-center gap-5">
-            <i
-              className="fi fi-rr-search text-xl cursor-pointer sm:hidden"
-              onClick={() => setShowSearchBar((prev) => !prev)}
-            ></i>
-
-            <Link to="/add-blog">
-              <div className="flex items-center mt-1 gap-2 hover:text-green-500 transition">
-                <i className="fi fi-rr-edit text-lg mt-1"></i>
-                <span className="text-sm font-medium hidden sm:inline">Write</span>
+          {/* ─── MOBILE LAYOUT: Flex ─── */}
+          <div className="flex md:hidden items-center justify-between">
+            {/* Brand */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-7 h-7 rounded-full bg-[#c84b31] flex items-center justify-center text-white">
+                <Feather size={13} />
               </div>
+              <span className="text-[18px] font-bold tracking-tight text-[#1e1b18] font-serif">
+                BlogSphere
+              </span>
             </Link>
 
-            {token ? (
-              <div
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-green-400 hover:scale-105 transition-transform cursor-pointer"
-                onClick={() => setShowPopup((prev) => !prev)}
-              >
-                <img
-                  src={
-                    profilePicture
-                      ? profilePicture
-                      : `https://api.dicebear.com/9.x/initials/svg?seed=${name}`
-                  }
-                  alt="profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <>
-                <Link to="/signin">
-                  <button className="bg-green-500 text-white px-4 py-1.5 rounded-full text-sm hover:bg-green-600 transition">
-                    Sign In
-                  </button>
-                </Link>
-                <Link to="/signup">
-                  <button className="border border-gray-300 px-4 py-1.5 rounded-full text-sm hover:bg-gray-100 transition">
-                    Sign Up
-                  </button>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Hamburger Icon (Mobile Only) */}
-          <div className="sm:hidden flex items-center gap-4">
-            <i
-              className="fi fi-rr-search text-xl cursor-pointer"
-              onClick={() => setShowSearchBar((prev) => !prev)}
-            ></i>
+            {/* Hamburger */}
             <button
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="text-2xl focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(p => !p)}
+              className="p-2 text-[#1e1b18] cursor-pointer"
             >
-              <i className={`fi ${isMobileMenuOpen ? 'fi-rr-cross' : 'fi-rr-menu-burger'}`}></i>
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="sm:hidden flex flex-col items-start bg-white border-t border-gray-200 shadow-md px-6 py-4 space-y-4">
-            {token ? (
-              <>
-                <Link to="/add-blog" onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  ✍️ Write
-                </Link>
-                <Link to={`/@${username}`} onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  👤 Profile
-                </Link>
-                <Link to="/edit-profile" onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  🛠️ Edit Profile
-                </Link>
-                <Link to="/setting" onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  ⚙️ Settings
-                </Link>
-                <button onClick={handleLogout} className={`${menuItemClass} text-red-500`}>
-                  🚪 Log Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  Sign In
-                </Link>
-                <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className={menuItemClass}>
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Profile Dropdown (Desktop only) */}
-        {showPopup && (
-          <div
-            onMouseLeave={() => setShowPopup(false)}
-            className="absolute top-[80px] right-8 w-[180px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 hidden sm:block"
-          >
-            <Link to={`/@${username}`}>
-              <p className={`${menuItemClass} bg-gray-50 rounded-t-xl`}>Profile</p>
-            </Link>
-            <Link to="/edit-profile">
-              <p className={menuItemClass}>Edit Profile</p>
-            </Link>
-            <Link to="/setting">
-              <p className={menuItemClass}>Setting</p>
-            </Link>
-            <p
-              onClick={handleLogout}
-              className={`${menuItemClass} text-red-500 rounded-b-xl`}
+        {/* ─── MOBILE DROPDOWN MENU ─── */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="md:hidden bg-[#faf7f2] border-t border-[#e5dfd3] mt-3 overflow-hidden shadow-sm"
             >
-              Log Out
-            </p>
-          </div>
-        )}
-      </div>
+              <div className="px-6 py-5 flex flex-col gap-4">
+                {token ? (
+                  <>
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[15px] font-semibold text-[#1e1b18]">Home Feed</Link>
+                    <Link to="/add-blog" onClick={() => setIsMobileMenuOpen(false)} className="text-[15px] font-semibold text-[#1e1b18]">Write a Story</Link>
+                    <Link to={`/@${username}`} onClick={() => setIsMobileMenuOpen(false)} className="text-[15px] font-semibold text-[#1e1b18]">My Profile</Link>
+                    <Link to="/setting" onClick={() => setIsMobileMenuOpen(false)} className="text-[15px] font-semibold text-[#1e1b18]">Settings</Link>
+                    {/* Mobile search */}
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="text"
+                        placeholder="Search stories..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && searchQuery.trim()) {
+                            navigate(`/search?q=${searchQuery.trim()}`);
+                            setSearchQuery('');
+                            setIsMobileMenuOpen(false);
+                          }
+                        }}
+                        className="flex-1 bg-[#f0e8dc] border border-[#e5dfd3] text-[13px] px-4 py-2.5 rounded-full outline-none text-[#1e1b18] focus:border-[#c84b31] transition"
+                      />
+                    </div>
+                    <button onClick={handleLogout} className="text-left text-[15px] font-bold text-red-500 cursor-pointer mt-2">Log Out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)} className="text-[15px] font-semibold text-[#1e1b18]">Sign In</Link>
+                    <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      <button className="w-full bg-[#1e1b18] text-white font-bold py-3.5 rounded-full text-[14px]">
+                        Join BlogSphere — Free
+                      </button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
-      {/* Space below navbar */}
-      <div className="pt-[80px]">
+      {/* Spacer below fixed navbar */}
+      <div className="pt-[68px]">
         <Outlet />
       </div>
+
+      {/* Conditionally render Footer */}
+      {!isAuthPage && <Footer />}
     </>
   );
 };

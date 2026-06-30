@@ -76,7 +76,13 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
-
+    socialLinks: {
+      twitter: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      github: { type: String, default: "" },
+      website: { type: String, default: "" },
+      youtube: { type: String, default: "" }
+    },
   } , {timestamps : true});
   
   const User = mongoose.model("User", userSchema);
