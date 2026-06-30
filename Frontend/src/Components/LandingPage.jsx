@@ -577,7 +577,7 @@ export default function LandingPage({ blogs, hasMore, isLoading, setPage, loader
       {/* ════════════════════════════════════════════
           § 6 FOOTER (Image 1 style)
       ════════════════════════════════════════════ */}
-      <footer className="bg-[#faf7f2] border-t border-[#e5dfd3] py-16 px-6 z-10 relative">
+      {/* <footer className="bg-[#faf7f2] border-t border-[#e5dfd3] py-16 px-6 z-10 relative">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <Feather size={18} className="text-[#c84b31]" />
@@ -594,7 +594,7 @@ export default function LandingPage({ blogs, hasMore, isLoading, setPage, loader
             <a href="#publications" className="hover:text-[#c84b31] transition">Explore</a>
           </div>
         </div>
-      </footer>
+      </footer> */}
 
     </div>
   );
